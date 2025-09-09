@@ -3,3 +3,9 @@
     src: url(../Fonts/PartyDayDemoRegular.ttf);
     
 }
+/*se le hizo un cambio a los atributos de posicion de modo que sea interatuable con ella
+mientras el modal del loguin esta abierto*/
+#mi-navbar{
+    position: fixed;
+    z-index: 1099;
+}

@@ -1,0 +1,25 @@
+div#MODAL{
+        display: block;
+    }
+
+#cabecera{
+    background-color: #4A3BC7;
+    color:#E9E7FF;
+}
+
+#mi-navbar{
+    position: relative;
+    z-index: 1099;
+
+}
+
+.modal-dialog{
+    margin-top: 30px;
+}
+
+@media (max-width:768px){
+    .modal-dialog {
+        margin-top: 100px;
+    }
+}
+
