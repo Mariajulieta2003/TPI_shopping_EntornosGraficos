@@ -8,8 +8,11 @@
     <link href="layouts/css/EstiloLogin.css" rel="stylesheet">
 </head>
 <body>
-
-    <?php include 'layouts//Navbar.php'?>
+    
+    <?php
+      //se incluye el navbar prototipo a modo de referencia
+     include 'layouts//Navbar.php'
+    ?>
     
       <div class="modal" id="MODAL" tabindex="-1" aria-modal="true" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
