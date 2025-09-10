@@ -1,7 +1,7 @@
 <style>@import url("./layouts/css/Navbar.css");</style>
 
-/*Se le agrego ID a la navbar para poder modificarla mediante css */
-<nav class="navbar navbar-expand-lg bg-body-tertiary navbarColor navShape" id="mi-navbar">
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary navbarColor navShape w-100" id="mi-navbar">
   <div class="container-fluid">
     <span class="navbar tituloNav" href="#">Shoppping UTN</span>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
