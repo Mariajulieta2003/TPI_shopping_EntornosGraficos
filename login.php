@@ -21,7 +21,7 @@
               <h5 class="modal-title">Login</h5>
             </div>
             <div class="modal-body">
-              <form action="procesar.php" method="post">
+              <form action="ProcesarLogin.php" method="post">
                   <div class="form-floating mb-3">
                       <input type="email" placeholder="Email" name="mail" class="form-control">
                       <label for="mail">Email</label>
