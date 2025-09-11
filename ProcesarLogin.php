@@ -7,16 +7,35 @@
 
     if(!empty($email) && !empty($password)){
         
-            $consulta="SELECT * from usuario
-                        where nombreUsuario='".$email."'
+            $consulta="SELECT 
+                                U.IDusuario,
+                                r.nombre AS rolNombre,
+                                c.nombre AS catNombre
+            
+                        from usuario U
+                        INNER JOIN rol r ON U.tipoFK = r.IDrol
+                        INNER JOIN categoria c ON U.categoriaFK = c.IDcategoria
+                        WHERE nombreUsuario='".$email."'
                          AND clave='".$password."'";
+
 
             $result=slql_consul($consulta);
 
             if(!empty($result)){
-                $_SESSION["id"]=$result["IDusuario"];
+                
+                $consulta_cant_promociones="SELECT COUNT(USP.usuarioFK) AS cant_prom 
+                                            FROM usuario U
+                                            INNER JOIN usopromocion USP ON USP.usuarioFK = U.IDusuario
+                                            WHERE USP.usuarioFK = '".$result["IDusuario"]."'";
+
+                $cant=slql_consul($consulta_cant_promociones);
+                $_SESSION["IDuser"]=$result["IDusuario"];
+                $_SESSION["Rol"]=$result["rolNombre"];
+                $_SESSION["Categoria"]=$result["catNombre"];
+                $_SESSION["CantProm"]=$cant["cant_prom"];
+                
                 //reemplazar por destino final luego del login
-                header("location: Perfil.php");
+                //header("location: Perfil.php");
                 exit();
             }
 

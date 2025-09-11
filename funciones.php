@@ -5,7 +5,7 @@
         
         mysqli_select_db($conection,"shopping");
 
-        $resul=mysqli_query($conection,$consulta) or die("error en consulta: ". mysqli_error());
+        $resul=mysqli_query($conection,$consulta) or die("error en consulta: ". mysqli_error($conection));
 
         $resul_arr=mysqli_fetch_assoc($resul);
 
