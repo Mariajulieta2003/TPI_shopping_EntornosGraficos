@@ -16,7 +16,8 @@
                         INNER JOIN rol r ON U.tipoFK = r.IDrol
                         INNER JOIN categoria c ON U.categoriaFK = c.IDcategoria
                         WHERE nombreUsuario='".$email."'
-                         AND clave='".$password."'";
+                        AND clave='".$password."'
+                        AND estado='1'";
 
 
             $result=slql_consul($consulta);

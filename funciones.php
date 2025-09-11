@@ -7,8 +7,12 @@
 
         $resul=mysqli_query($conection,$consulta) or die("error en consulta: ". mysqli_error($conection));
 
-        $resul_arr=mysqli_fetch_assoc($resul);
-
+        //Verificamos el resultado antes de transformarlo en array asociativo
+        if(!is_bool($resul)){
+            $resul_arr=mysqli_fetch_assoc($resul);
+        }
+        
+        
         mysqli_close($conection);
 
         return $resul_arr;  
