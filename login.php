@@ -8,7 +8,7 @@
     <link href="layouts/css/EstiloLogin.css" rel="stylesheet">
 </head>
 <body>
-    
+    <!-- Este login es un mero prototipo para que puedan testear el inicio de sesion y/o el registro-->
     <?php
       //se incluye el navbar prototipo a modo de referencia
      include 'layouts//Navbar.php'
