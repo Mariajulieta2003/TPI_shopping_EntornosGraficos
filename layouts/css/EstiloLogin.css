@@ -1,0 +1,21 @@
+div#MODAL{
+        display: block;
+    }
+
+#cabecera{
+    background-color: #4A3BC7;
+    color:#E9E7FF;
+}
+
+
+
+.modal-dialog{
+    margin-top: 30px;
+}
+
+@media (max-width:768px){
+    .modal-dialog {
+        margin-top: 100px;
+    }
+}
+
