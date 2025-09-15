@@ -41,10 +41,13 @@
             }
 
             //retorna a login para que inicie sesion nuevamente
-            header("location: login.php");
-            exit();
             
-        }
+            
+    }
+
+    $_SESSION["MensajeError1"]=1;
+    header("location: login.php");
+    exit();
 
     
 
