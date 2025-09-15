@@ -12,8 +12,7 @@
     <title>Document</title>
 </head>
 <body>
-
-<?php include 'layouts/Navbar.php'; ?>
+<?php include './layouts/Navbar.php'; ?>
   <section class="hero text-white">
     <div class="container py-5">
       <h1 class="display-5 fw-bold mb-4">Descubrí las mejores<br>tiendas y ofertas</h1>
