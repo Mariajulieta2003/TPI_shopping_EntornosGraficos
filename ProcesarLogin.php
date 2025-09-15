@@ -36,7 +36,7 @@
                 $_SESSION["CantProm"]=$cant["cant_prom"];
                 
                 //reemplazar por destino final luego del login
-                //header("location: Perfil.php");
+                header("location: index.php");
                 exit();
             }
 
@@ -44,7 +44,7 @@
             
             
     }
-
+    //retorna a login para que inicie sesion nuevamente
     $_SESSION["MensajeError1"]=1;
     header("location: login.php");
     exit();

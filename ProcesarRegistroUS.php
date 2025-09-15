@@ -1,7 +1,7 @@
 <?php
     include_once 'funciones.php';
 
-    $mail=trim($_POST["mail"]);
+    $mail=trim($_POST["email"]);
     echo $mail;
     $password=trim($_POST["password"]);
     echo $password;
@@ -21,13 +21,11 @@
         
         $cant_coincidencias=slql_consul($consult_verificacion);
 
-        print_r($cant_coincidencias);
-
         if(!($cant_coincidencias["cant"]>0)){
             //tipoFK='1' asumiendo que ese es el ID del tipo cliente
             //tipoFK='1' asumiendo que ese es el ID la categoria mas baja
-            $consul_insercion="INSERT into usuario (IDusuario,nombreUsuario,clave,tipoFK,categoriaFK)
-                                VALUES ('','".$mail."','".$password."','1','1')";
+            $consul_insercion="INSERT into usuario (IDusuario,nombreUsuario,clave,tipoFK,categoriaFK,estado)
+                                VALUES ('','".$mail."','".$password."','1','1','1')";
 
             $result=slql_consul($consul_insercion);
 
@@ -45,8 +43,7 @@
 
     }
     //La constraseña o el mail estaban vacios
-    //header("location: login.php");
-    echo "sas";
+    header("location: registro.php");
     exit();
 
 ?>
