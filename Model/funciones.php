@@ -5,7 +5,7 @@
         
         mysqli_select_db($conection,"shopping");
 
-        $resul=mysqli_query($conection,$consulta) or die("error en consulta: ". mysqli_error($conection));
+        $resul=mysqli_query($conection,$consulta) or die("error en consulta");
 
         //Verificamos el resultado antes de transformarlo en array asociativo
         if(!is_bool($resul)){
