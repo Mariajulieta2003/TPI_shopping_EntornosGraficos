@@ -1,0 +1,9 @@
+
+  :root{
+      --violeta-800:#2A2668;
+    
+    }
+  
+  .site-footer{background:var(--violeta-800);color:#2A2668}
+    .site-footer a{color:#cfd3ff;text-decoration:none}
+    .site-footer a:hover{color:#fff}

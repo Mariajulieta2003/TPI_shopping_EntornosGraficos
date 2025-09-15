@@ -1,0 +1,16 @@
+:root{--primary:#4A3BC7;--primary-rgb:74,59,199;--subtle:#F3F1FF}
+.promo-top{height:44px;background:var(--primary);border-top-left-radius:.5rem;border-top-right-radius:.5rem}
+.badge-discount{background:rgba(var(--primary-rgb),.15);color:var(--primary);font-weight:600}
+.category-card{background:var(--subtle);border:0}
+
+ .categorias .card-body {
+    background-color: #eeecfd !important;
+}
+    .categorias .card-body:hover {
+        background-color: #9795bf !important;
+    }
+
+
+.event-card{transition:transform .2s, box-shadow .2s}
+.event-card:hover{transform:translateY(-4px); box-shadow:0 1rem 2rem rgba(0,0,0,.15)}
+@media (prefers-reduced-motion: reduce){.event-card{transition:none}} /* accesible */

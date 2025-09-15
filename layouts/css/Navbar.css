@@ -1,11 +1,19 @@
-@font-face {
-    font-family: 'fontshop';
-    src: url(../Fonts/PartyDayDemoRegular.ttf);
-    
+
+:root{
+      --violeta-800:#2A2668;
+      --violeta-700:#3A3295;
+      --primary:#4A3BC7;
+      --primary-rgb:74,59,199;
+    }
+
+.hero-header{
+
+  background: linear-gradient(180deg,#2A2668 0%, #3A3295 60%, #3A3295 100%);
 }
-/*se le hizo un cambio a los atributos de posicion de modo que sea interatuable con ella
-mientras el modal del loguin esta abierto*/
-#mi-navbar{
-    position: fixed;
-    z-index: 1099;
+.hero-header .hero-search .form-control{
+  background: rgba(255,255,255,.15);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.35);
 }
+.hero-header .hero-search .form-control::placeholder{ color:rgba(255,255,255,.8); }
+.hero-header .btn-primary{ background:#4A3BC7; border-color:#4A3BC7; }
