@@ -54,50 +54,7 @@
     el.addEventListener(ev, fn);
   });
 
-  // Envío por fetch
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    form.classList.add('was-validated'); // activa estilos bootstrap
 
-    // Validar todo
-    Object.values(validators).forEach(fn => fn());
-    const ok = form.querySelectorAll('.is-invalid').length === 0;
-
-    if (!ok) {
-      msg.textContent = 'Revisá los campos marcados en rojo.';
-      msg.className = 'text-danger';
-      return;
-    }
-
-  
-    try {
-      btn.disabled = true;
-      btn.innerText = 'Enviando…';
-
-      const fd = new FormData(form);
-      const resp = await fetch(form.action, { method: 'POST', body: fd });
-      const data = await resp.json().catch(() => ({}));
-
-      if (resp.ok && (data.ok ?? true)) {
-        msg.textContent = data.message || 'Registro enviado.';
-        msg.className = 'text-success';
-        form.reset();
-        // limpiar estados
-        form.querySelectorAll('.is-valid,.is-invalid').forEach(el => {
-          el.classList.remove('is-valid','is-invalid');
-        });
-      } else {
-        msg.textContent = data.message || 'Error al registrar.';
-        msg.className = 'text-danger';
-      }
-    } catch (err) {
-      msg.textContent = 'Fallo de red o servidor.';
-      msg.className = 'text-danger';
-    } finally {
-      btn.disabled = false;
-      btn.innerText = 'Crear cuenta';
-    }
-  });
 })();
 (function () {
   function clearValidation(form, msg) {

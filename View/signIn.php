@@ -20,7 +20,7 @@
     <div class="col-12 col-lg-8 col-xl-7 card card-body p-3">
       <h1 class="h4 mb-4">Registro</h1>
 
-      <form id="regForm" class="needs-validation " action="./" method="post" novalidate>
+      <form id="regForm" class="needs-validation " action="../Controller/signInController.php" method="post" novalidate>
         <div class="row g-3">
           <div class="col-md-6">
             <div class="form-floating">
@@ -109,10 +109,13 @@
   </div>
 </section>
 
-<script src="./js/signIn_validaciones.js" defer></script>
+
 
 
   <?php include '../layouts/Footer.php'; ?>
+
+ <script src="./js/signIn_validaciones.js" defer></script>
+ <script src="./js/SignIn_Fetch.js" defer></script>
 <script src="https://kit.fontawesome.com/accf4898f4.js" crossorigin="anonymous"></script>  
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>

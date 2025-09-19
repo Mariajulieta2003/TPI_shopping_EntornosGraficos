@@ -25,13 +25,8 @@
 
         <a class="btn btn-outline-light btn-lg me-3" href="./View/login.php" id="btnLogin"><i class="bi bi-box-arrow-in-right mx-1 me-2"></i>Ingresar</a>
 
-        <?php
-        if(!isset($_SESSION["IDuser"])){
-        ?>
-          <a class="btn btn-outline-light btn-lg me-3" href="login.php" id="btnLogin"><i class="bi bi-box-arrow-in-right mx-1 me-2"></i>Ingresar</a>
-        <?php
-        }
-        ?>
+     
+     
         
 
       </div>

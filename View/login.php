@@ -15,8 +15,8 @@
     <!-- Este login es un mero prototipo para que puedan testear el inicio de sesion y/o el registro-->
 
   <?php 
-    include './layouts/Navbar.php';
-    session_start();
+    include '../layouts/Navbar.php';
+  
   ?>
 
      
@@ -29,9 +29,7 @@
         <div class="card-body p-5">
           <h1 class="h3 mb-4 text-center">Iniciar sesión</h1>
 
-          <?php
-            include_once 'Mensajes.php'
-          ?>
+      
 
           <form action="ProcesarLogin.php" method="post" autocomplete="on">
             <div class="form-floating mb-3">
