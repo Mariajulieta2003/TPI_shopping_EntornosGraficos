@@ -61,5 +61,16 @@ function ExisteUsuario($username, $email) {
     return $count > 0; 
 }
 
+function EstaActivo($email):bool
+{
+$pdo = getConnection();
+$sql = 'select usuario.estado from usuario where email= :email';
+$stmt = $pdo->prepare($sql);
+$stmt->execute(["email"=> $email]);
+
+$Existencia = $stmt->fetchColumn();
+return $Existencia == 0;
+}
+
 
 ?>

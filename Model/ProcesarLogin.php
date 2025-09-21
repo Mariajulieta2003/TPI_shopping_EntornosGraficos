@@ -49,6 +49,24 @@
     header("location: login.php");
     exit();*/
 
+   
+// Archivo: Controller/LoginController.php
+
+include_once("../Model/conexion.php");
+
+function checkCredentials($email, $password) {
+    $pdo = getConnection();
     
+    $sql = "SELECT * FROM usuario WHERE email = :email and clave = :psswd LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+    
+    $stmt->execute(['email' => $email, 'psswd' => $password]);
+
+    $user = $stmt->fetch();
+    return $user;
+}
+
 
 ?>
+
+

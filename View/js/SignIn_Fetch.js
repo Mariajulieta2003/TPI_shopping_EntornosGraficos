@@ -3,55 +3,57 @@ document.addEventListener('DOMContentLoaded', () => {
   const msg  = document.getElementById('formMsg');
   const btn  = document.getElementById('btnEnviar');
 
- if (!res.ok || data.ok === false) {
-    // Muestra mensaje de error 
-    const err = data.message || 'Ocurrió un error';
-    show('danger', err);
-    return;
-}
-
-//todo OK
-show('success', data.message || 'Todo salió bien');
-
-if (data.redirect) window.location.href = data.redirect;
-
+  const show = (type, text) => {
+    if (!msg) return;
+    msg.innerHTML = `<div class="alert alert-${type} py-2 mb-0">${text}</div>`;
+  };
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-  
+    // Configuración para cancelar la solicitud si tarda demasiado
     const ac = new AbortController();
-    const to = setTimeout(() => ac.abort(), 15000);
+    const to = setTimeout(() => ac.abort(), 15000);  // Timeout de 15 segundos
 
+    // Deshabilitar el botón para evitar múltiples envíos
     btn.disabled = true;
 
     try {
+      // Enviar el formulario usando fetch
       const res = await fetch(form.action, {
         method: 'POST',
         body: new FormData(form),            
         headers: { 'Accept': 'application/json' },
         cache: 'no-store',
-        signal: ac.signal 
+        signal: ac.signal  // Añadir la señal para abortar si excede el tiempo
       });
 
-      const ct   = res.headers.get('content-type') || '';
+      // Verificar si la respuesta es JSON
+      const ct = res.headers.get('content-type') || '';
       const data = ct.includes('application/json')
-        ? await res.json()
-        : { ok: res.ok, message: await res.text() };
+        ? await res.json()  // Parsear la respuesta como JSON
+        : { ok: res.ok, message: await res.text() };  // En caso de no ser JSON
 
+      // Si la respuesta del servidor indica error, mostrar el mensaje de error
       if (!res.ok || data.ok === false) {
-        const err = data.errors?.join('<br>') || data.message || 'Error';
-        show('danger', err);
-        return;
+        const err = data.message || 'Ocurrió un error en el servidor';
+        show('danger', err);  // Mostrar mensaje de error
+        return;  // Detener la ejecución si hay error
       }
 
-      show('success', data.message || 'OK');
-      if (data.redirect) window.location.href = data.redirect;
+      // Si todo está OK, mostrar el mensaje de éxito
+      show('success', data.message || '¡Datos validados correctamente!');
+
+      // Si hay una URL de redirección, redirigir al usuario
+      if (data.redirect) {
+        window.location.href = data.redirect;  // Redirigir a la URL proporcionada
+      }
 
     } catch (err) {
-      // Capturar errores
+      // Capturar errores de red o problemas con la solicitud
       show('danger', 'Fallo de red o petición cancelada.');
     } finally {
+      // Limpiar el timeout y volver a habilitar el botón
       clearTimeout(to); 
       btn.disabled = false; 
     }

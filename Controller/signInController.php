@@ -39,8 +39,12 @@ try {
             error('El email no es válido o no coinciden.');
         }
 
-        if(ExisteUsuario(username: $nombreCompleto,email: $email)==true ) {
+       if(ExisteUsuario(username: $nombreCompleto,email: $email)==true ) {
             error(" Mail ya registrado");
+        }
+
+        if(EstaActivo($email)) {
+            error("Valide la cuenta desde su correo");
         }
 
         if ($pwd != $pwd2 || !preg_match($regex['pass'], $pwd) || !preg_match($regex['pass'], $pwd2)) {
@@ -62,7 +66,7 @@ try {
      
         echo json_encode([
             'ok' => true,
-           
+            'redirect' => "../index.php",
             'message' => 'Datos validados correctamente.'
         ]);
     }
