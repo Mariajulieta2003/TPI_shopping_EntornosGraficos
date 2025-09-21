@@ -23,7 +23,7 @@
         */
 
 
-function getConnection(): mysqli {
+/*function getConnection(): mysqli {
     $host = "127.0.0.1";
     $user = "root";
     $pass = "root";
@@ -40,4 +40,23 @@ function getConnection(): mysqli {
 
     $conn->set_charset("utf8mb4"); // para acentos y ñ
     return $conn;
+}
+*/
+
+
+function getConnection() {
+    $host = '127.0.0.1';
+    $db   = 'shopping';
+    $user = 'root';
+    $pass = 'root';
+    $charset = 'utf8mb4';
+
+    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+    try {
+        $pdo = new PDO($dsn, $user, $pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return $pdo;
+    } catch (\PDOException $e) {
+        die("Error de conexión: " . $e->getMessage());
+    }
 }

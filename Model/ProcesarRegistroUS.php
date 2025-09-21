@@ -1,5 +1,5 @@
 <?php
-    include_once 'funciones.php';
+   /* include_once 'funciones.php';
 
     $mail=trim($_POST["email"]);
     echo $mail;
@@ -44,6 +44,22 @@
     }
     //La constraseña o el mail estaban vacios
     header("location: registro.php");
-    exit();
+    exit();*/
+include_once("../Model/conexion.php");
+
+
+function ExisteUsuario($username, $email) {
+    $pdo = getConnection();
+
+    $sql = "SELECT COUNT(*) FROM usuario WHERE email = :email";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        'email' => $email
+    ]);
+   
+    $count = $stmt->fetchColumn();
+    return $count > 0; 
+}
+
 
 ?>

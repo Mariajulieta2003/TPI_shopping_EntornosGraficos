@@ -3,17 +3,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const msg  = document.getElementById('formMsg');
   const btn  = document.getElementById('btnEnviar');
 
-  const show = (type, text) => {
-    if (!msg) return;
-    msg.innerHTML = `<div class="alert alert-${type} py-2 mb-0">${text}</div>`;
-  };
+ if (!res.ok || data.ok === false) {
+    // Muestra mensaje de error 
+    const err = data.message || 'Ocurrió un error';
+    show('danger', err);
+    return;
+}
+
+//todo OK
+show('success', data.message || 'Todo salió bien');
+
+if (data.redirect) window.location.href = data.redirect;
+
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
   
     const ac = new AbortController();
-    const to = setTimeout(() => ac.abort(), 15000); // Establecer un límite de 15 segundos para la petición
+    const to = setTimeout(() => ac.abort(), 15000);
 
     btn.disabled = true;
 
@@ -41,11 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.redirect) window.location.href = data.redirect;
 
     } catch (err) {
-      // Capturar errores, como fallo en la red o cancelación de la solicitud
+      // Capturar errores
       show('danger', 'Fallo de red o petición cancelada.');
     } finally {
-      clearTimeout(to); // Limpiar el timeout cuando termina la solicitud
-      btn.disabled = false; // Volver a habilitar el botón
+      clearTimeout(to); 
+      btn.disabled = false; 
     }
   });
 });

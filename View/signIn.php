@@ -82,7 +82,7 @@
                 <option>Femenino</option>
                 <option>Masculino</option>
                 <option>Otro</option>
-                <option>Prefiero no decirlo</option>
+              
               </select>
               <label for="sexo">Sexo</label>
               <div class="invalid-feedback">Seleccione una opción.</div>

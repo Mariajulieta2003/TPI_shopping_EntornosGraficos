@@ -1,5 +1,5 @@
 <?php
-    include_once ("funciones.php");
+    /*include_once ("funciones.php");
     session_start();
 
     $email=trim($_POST["mail"]);
@@ -47,7 +47,7 @@
     //retorna a login para que inicie sesion nuevamente
     $_SESSION["MensajeError1"]=1;
     header("location: login.php");
-    exit();
+    exit();*/
 
     
 
