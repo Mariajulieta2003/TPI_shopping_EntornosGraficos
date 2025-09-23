@@ -174,7 +174,7 @@
 
         <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
           <a class="btn btn-primary btn-lg"
-             href="/contacto.php?tipo=locatario"
+             href="./View/CrearTienda.php"
              aria-label="Ir al formulario para abrir un local">
             Quiero abrir un local
           </a>
