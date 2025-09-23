@@ -1,5 +1,6 @@
 <?php
 include_once("../Model/ProcesarRegistroUS.php");
+include_once("../Model/Sendmail.php");
 
 function error($mensaje) {
     throw new Exception($mensaje);
@@ -61,10 +62,11 @@ try {
         }
 
          $id=insertarUsuario($nombreCompleto,$email,$pwd,$tel,$sexo,$dni);
-     
+        EnviaMail("sitare8285@dotxan.com");//mail hardcodeado--> generadoe con https://temp-mail.org/es/
+
         echo json_encode([
             'ok' => true,
-            'redirect' => "../index.php",
+            'redirect' => "../View/MailSent.php",
             'message' => 'Datos validados correctamente.'
         ]);
     }

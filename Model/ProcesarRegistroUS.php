@@ -100,6 +100,13 @@ function insertarUsuario( $nombre, $email, $pwd, $tel, $sexo, $dni) {
     return $ok ? (int)$pdo->lastInsertId() : false;
 }
 
+function actualizarEstado( $email) {
+    $pdo = getConnection();
+    $sql = "UPDATE `usuario` SET `estado` = 1 WHERE `email` = :email";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':email' => $email]);
 
+    return $stmt->rowCount() > 0;  // Si se actualizó al menos un registro
+}
 
 ?>
