@@ -72,5 +72,34 @@ $Existencia = $stmt->fetchColumn();
 return $Existencia == 0;
 }
 
+function insertarUsuario( $nombre, $email, $pwd, $tel, $sexo, $dni) {
+
+    EstaActivo($email)? true : throw new Exception("mail ya verificado,verifique el mail");
+
+    $tipoFK=1 ;
+    $categoriaFK=1; 
+    $estado=0;
+
+    $pdo = getConnection();
+    $sql = "INSERT INTO `usuario`
+              (`nombreUsuario`,`email`,`clave`,`telefono`,`Sexo`,`tipoFK`,`categoriaFK`,`estado`,`DNI`)
+            VALUES
+              (:nombre, :email, :clave, :telefono, :sexo, :tipoFK, :categoriaFK, :estado,:DNI)";
+    $stmt = $pdo->prepare($sql);
+    $ok = $stmt->execute([
+        ':nombre'      => $nombre,
+        ':email'       => $email,
+        ':clave'       => password_hash($pwd, PASSWORD_DEFAULT),
+        ':telefono'    => $tel,
+        ':sexo'        => $sexo,          
+        ':tipoFK'      => (int)$tipoFK,   
+        ':categoriaFK' => (int)$categoriaFK, 
+        ':estado'      => (int)$estado ,
+        ':DNI'      => $dni,
+    ]);
+    return $ok ? (int)$pdo->lastInsertId() : false;
+}
+
+
 
 ?>

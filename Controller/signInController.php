@@ -30,8 +30,8 @@ try {
             'telefono'  => '/^\d{7,20}$/',
             'sexo'      => '/^(Femenino|Masculino|Otro|Prefiero\sno\sdicirlo)$/'
         ];
-
-        if (!preg_match($regex['nombre'], $nombreCompleto)) {
+          
+     if (!preg_match($regex['nombre'], $nombreCompleto)) {
             error('Solo se permiten letras, espacios y tildes, de 2 a 50 caracteres.');
         }
 
@@ -43,9 +43,6 @@ try {
             error(" Mail ya registrado");
         }
 
-        if(EstaActivo($email)) {
-            error("Valide la cuenta desde su correo");
-        }
 
         if ($pwd != $pwd2 || !preg_match($regex['pass'], $pwd) || !preg_match($regex['pass'], $pwd2)) {
             error('Las contraseñas no coinciden o no cumplen los requisitos.');
@@ -63,6 +60,7 @@ try {
             error("DNI inválido.");
         }
 
+         $id=insertarUsuario($nombreCompleto,$email,$pwd,$tel,$sexo,$dni);
      
         echo json_encode([
             'ok' => true,

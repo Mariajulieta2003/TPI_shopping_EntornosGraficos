@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       // Capturar errores de red o problemas con la solicitud
-      show('danger', 'Fallo de red o petición cancelada.');
+      show('danger', data);
     } finally {
       // Limpiar el timeout y volver a habilitar el botón
       clearTimeout(to); 

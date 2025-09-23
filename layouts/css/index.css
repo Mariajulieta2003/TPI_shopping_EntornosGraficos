@@ -14,3 +14,25 @@
 .event-card{transition:transform .2s, box-shadow .2s}
 .event-card:hover{transform:translateY(-4px); box-shadow:0 1rem 2rem rgba(0,0,0,.15)}
 @media (prefers-reduced-motion: reduce){.event-card{transition:none}} /* accesible */
+
+
+  #cta-locatarios {
+    position: relative !important;
+    background-size: cover !important;
+    background-position: center !important;
+    transition: background-size 0.3s ease !important;
+  }
+
+  #cta-locatarios:hover {
+    background-size: 110% !important;  /* Efecto zoom out */
+  }
+
+  /* Filtro oscuro (capa sobre la imagen) */
+  #cta-locatarios .bg-dark {
+    background-color: rgba(0, 0, 0, 0.5) !important;  /* Oscurecer la imagen */
+  }
+
+  /* Texto oscuro para buen contraste */
+  #cta-locatarios .text-dark {
+    color: #333333 !important;
+  }

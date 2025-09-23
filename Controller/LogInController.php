@@ -3,7 +3,6 @@ include_once('../Model/ProcesarLogin.php');
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Función para mostrar mensajes de error
 function error($mensaje) {
     echo json_encode(['ok' => false, 'message' => $mensaje]);
     exit;
@@ -20,7 +19,7 @@ try {
         if (empty($email) || empty($password)) {
             error('Email o contraseña no pueden estar vacíos.');
         }
-
+                
    
         $user = checkCredentials($email, $password);
 
@@ -40,6 +39,6 @@ try {
     }
 } catch (Exception $e) {
     
-    error('Ocurrió un error: ' . $e->getMessage());
+    error(mensaje: 'Ocurrió un error: ' . $e->getMessage());
 }
 ?>
