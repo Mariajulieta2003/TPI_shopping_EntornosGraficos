@@ -1,3 +1,5 @@
+CREATE DATABASE  IF NOT EXISTS `shopping` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `shopping`;
 -- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: shopping
@@ -24,10 +26,10 @@ DROP TABLE IF EXISTS `categoria`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `categoria` (
   `IDcategoria` int NOT NULL AUTO_INCREMENT,
-  `descripcion` varchar(45) DEFAULT NULL,
-  `nombre` varchar(45) DEFAULT NULL,
+  `descripcion` varchar(90) DEFAULT NULL,
+  `nombre` varchar(90) DEFAULT NULL,
   PRIMARY KEY (`IDcategoria`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -36,6 +38,7 @@ CREATE TABLE `categoria` (
 
 LOCK TABLES `categoria` WRITE;
 /*!40000 ALTER TABLE `categoria` DISABLE KEYS */;
+INSERT INTO `categoria` VALUES (1,'usuario que hiso mas de 3 compras mensuales','medio'),(2,'usuario que tiene mas de 5 compras  mensuales','avanzado'),(3,'usuario con mas de  10 compras  mensuales','rockstar'),(4,'usuario  registrado','basico');
 /*!40000 ALTER TABLE `categoria` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -49,13 +52,15 @@ DROP TABLE IF EXISTS `local`;
 CREATE TABLE `local` (
   `IDlocal` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
-  `ubicacion` varchar(45) DEFAULT NULL,
   `rubro` varchar(45) NOT NULL,
   `usuarioFK` int NOT NULL,
+  `ubicacionFK` int DEFAULT NULL,
   PRIMARY KEY (`IDlocal`),
   KEY `usuario-local_idx` (`usuarioFK`),
+  KEY `local-ubicacion_idx` (`ubicacionFK`),
+  CONSTRAINT `local-ubicacion` FOREIGN KEY (`ubicacionFK`) REFERENCES `ubicacion` (`IDubicacion`),
   CONSTRAINT `usuario-local` FOREIGN KEY (`usuarioFK`) REFERENCES `usuario` (`IDusuario`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -64,6 +69,7 @@ CREATE TABLE `local` (
 
 LOCK TABLES `local` WRITE;
 /*!40000 ALTER TABLE `local` DISABLE KEYS */;
+INSERT INTO `local` VALUES (1,'Local 2','vende ojotas',2,2),(2,'Local 1','vender mates',9,1);
 /*!40000 ALTER TABLE `local` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -136,8 +142,8 @@ DROP TABLE IF EXISTS `rol`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `rol` (
   `IDrol` int NOT NULL,
-  `nombre` varchar(45) NOT NULL,
-  `descripcion` varchar(45) DEFAULT NULL,
+  `nombre` varchar(90) NOT NULL,
+  `descripcion` varchar(90) DEFAULT NULL,
   PRIMARY KEY (`IDrol`),
   UNIQUE KEY `nombre_UNIQUE` (`nombre`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -149,7 +155,34 @@ CREATE TABLE `rol` (
 
 LOCK TABLES `rol` WRITE;
 /*!40000 ALTER TABLE `rol` DISABLE KEYS */;
+INSERT INTO `rol` VALUES (0,'Administrador','persona encargada de llevar adelante el sistema'),(1,'Usuario','persona registrada en el sistema'),(2,'Comerciante','persona que tiene un comercio');
 /*!40000 ALTER TABLE `rol` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ubicacion`
+--
+
+DROP TABLE IF EXISTS `ubicacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ubicacion` (
+  `IDubicacion` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(45) NOT NULL,
+  `Descripcion` varchar(500) NOT NULL,
+  `estado` int NOT NULL,
+  PRIMARY KEY (`IDubicacion`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ubicacion`
+--
+
+LOCK TABLES `ubicacion` WRITE;
+/*!40000 ALTER TABLE `ubicacion` DISABLE KEYS */;
+INSERT INTO `ubicacion` VALUES (1,'Local-1 planta baja','descripcion1',0),(2,'local-2 planta baja','descripcion2',0),(3,'local-3 planta alta','descripcion3',0);
+/*!40000 ALTER TABLE `ubicacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -190,16 +223,20 @@ DROP TABLE IF EXISTS `usuario`;
 CREATE TABLE `usuario` (
   `IDusuario` int NOT NULL AUTO_INCREMENT,
   `nombreUsuario` varchar(45) NOT NULL,
-  `clave` varchar(45) NOT NULL,
+  `email` varchar(90) NOT NULL,
+  `clave` varchar(600) NOT NULL,
+  `telefono` varchar(45) DEFAULT NULL,
+  `Sexo` varchar(45) DEFAULT NULL,
   `tipoFK` int NOT NULL,
   `categoriaFK` int NOT NULL,
-  `estado` binary(1) DEFAULT '0',
+  `estado` int DEFAULT NULL,
+  `DNI` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`IDusuario`),
   KEY `usuario-rol_idx` (`tipoFK`),
   KEY `usuario-categoria_idx` (`categoriaFK`),
   CONSTRAINT `usuario-categoria` FOREIGN KEY (`categoriaFK`) REFERENCES `categoria` (`IDcategoria`),
   CONSTRAINT `usuario-rol` FOREIGN KEY (`tipoFK`) REFERENCES `rol` (`IDrol`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -208,6 +245,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
+INSERT INTO `usuario` VALUES (1,'admin','admin@admin.com','Admin123','3436448814','Masculino',0,1,1,'43349281'),(2,'Hipolito la barba','labarbahipolito@gmail.com','Operacion9','3436448814','Masculino',1,1,1,'43349281'),(9,'Hipolito la barba','labarbahipolito7@gmail.com','$2y$10$ifopBS61YjpKxRJVF.THSOwck0qFcmsdmiB9PyuBErvGF0ZjlylTS','03436448814','Masculino',1,1,0,'43349281'),(10,'Hipolito la barba','sitare8285@dotxan.com','$2y$10$OxIN0n.VvGLd6Ke7UrJyt.1Z0xxO3neaS8JDJ61AveVomheK5sBuS','03436448814','Masculino',1,1,1,'43349281');
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -220,4 +258,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-09-11 17:14:56
+-- Dump completed on 2025-09-23 13:55:12
