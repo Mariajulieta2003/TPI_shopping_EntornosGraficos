@@ -32,6 +32,7 @@
           <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
           <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
           <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="mailto:admin@admin.com" aria-label="Email" style="text-decoration: none; font-size: 0.875rem;"><i class="bi bi-envelope"></i> cualquier consulta contactarse con admin@admin.com</a>
         </div>
       </div>
     </div>

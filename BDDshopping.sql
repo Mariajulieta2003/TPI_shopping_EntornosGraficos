@@ -160,6 +160,38 @@ INSERT INTO `rol` VALUES (0,'Administrador','persona encargada de llevar adelant
 UNLOCK TABLES;
 
 --
+-- Table structure for table `solicitud`
+--
+
+DROP TABLE IF EXISTS `solicitud`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `solicitud` (
+  `IDsolicitud` int NOT NULL AUTO_INCREMENT,
+  `rubro` varchar(45) NOT NULL,
+  `cuil` varchar(45) NOT NULL,
+  `nombre` varchar(45) NOT NULL,
+  `email` varchar(45) NOT NULL,
+  `contraseña` varchar(1500) NOT NULL,
+  `dni` varchar(45) NOT NULL,
+  `sexo` varchar(45) NOT NULL,
+  `telefono` varchar(45) NOT NULL,
+  `ubicacion` int NOT NULL,
+  `nombreLocal` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`IDsolicitud`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `solicitud`
+--
+
+LOCK TABLES `solicitud` WRITE;
+/*!40000 ALTER TABLE `solicitud` DISABLE KEYS */;
+/*!40000 ALTER TABLE `solicitud` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `ubicacion`
 --
 
@@ -258,4 +290,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-09-23 13:55:12
+-- Dump completed on 2025-10-14 19:36:01

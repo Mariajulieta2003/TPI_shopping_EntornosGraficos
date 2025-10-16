@@ -74,7 +74,7 @@ return $Existencia == 0;
 
 function insertarUsuario( $nombre, $email, $pwd, $tel, $sexo, $dni) {
 
-    EstaActivo($email)? true : throw new Exception("mail ya verificado,verifique el mail");
+    EstaActivo($email)? true : throw new Exception("mail ya registrado,verifique el mail");
 
     $tipoFK=1 ;
     $categoriaFK=1; 
