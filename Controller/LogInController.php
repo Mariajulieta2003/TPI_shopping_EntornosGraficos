@@ -23,12 +23,29 @@ try {
    
         $user = checkCredentials($email, $password);
 
-        if ($user["email"]==$email && $user["clave"]==$password) {
-            
+        if ($user["email"]==$email && password_verify($password, $user['clave'])) {
+            session_start();
+
+            $_SESSION['IDusuario'] = $user['IDusuario'];
+            $_SESSION['Rol'] = $user['rol_nombre'];
+            $_SESSION['Categoria'] = $user['categoria_nombre'];
+            $_SESSION['Nombre'] = $user['nombreUsuario'];
+
+            switch($user['rol_id']) {
+                case 0:
+                    $Ruta = 'DashboardAdmin';
+                    break;
+                case 1:
+                    $Ruta = 'DashBoardCliente.php';
+                    break;
+                case 2:
+                    $Ruta = 'DashboardTienda';
+                    break;
+            }
             echo json_encode([
                 'ok' => true,
                 'message' => 'Inicio de sesión exitoso.',
-                'redirect' => '../index.php' 
+                'redirect' => '../View/'.$Ruta.'' 
             ]);
         } else {
            

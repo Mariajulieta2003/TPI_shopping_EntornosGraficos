@@ -12,6 +12,7 @@ if (!function_exists('listarTiendas')) {
         l.IDlocal,
         l.nombre                                   AS local_nombre,
         l.rubro                                    AS local_rubro,
+        l.codigo as codigo,
         l.ubicacionFK,
         u.IDubicacion,
         u.nombre                                   AS ubicacion_nombre,

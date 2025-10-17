@@ -71,3 +71,4 @@ function listarPromocionesVigentes(int $limit = 50): array {
 
     return $rows;
 }
+

@@ -1,0 +1,424 @@
+<?php 
+session_start(); 
+if (!isset($_SESSION['IDusuario'])) {
+    header("Location: ../index.php");
+    exit;
+}
+require_once '../Model/ProcesarDashboardCliente.php';
+
+$CAT = $_SESSION['Categoria'] ?? 'Inicial';
+$IDU = (int)($_SESSION['IDusuario'] ?? 0);
+
+$numPromosDisponibles = getPromocionesDisponiblesPorCategoria($CAT);
+$numPromosUsadas      = getPromocionesUsadasPorCliente($IDU);
+$numNovedadesActivas  = getNovedadesPorCategoria($CAT);
+$promociones          = getPromocionesPorCategoria($CAT, $IDU); // ← pasa ID usuario
+$totalPromos          = count($promociones);
+?>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - Cliente</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <style>
+    :root{
+      --primary: #4A3BC7;
+      --primary-rgb: 74,59,199;
+      --subtle: #F3F1FF;
+      --muted: #6c6c6c;
+      --success: #28a745;
+    }
+
+    body { background: linear-gradient(180deg, #fff 0%, var(--subtle) 100%); }
+    .navbar, .card-header { background: var(--primary); color: #fff; }
+    .btn-primary { background: var(--primary); border-color: rgba(var(--primary-rgb), 0.9); }
+    .btn-primary:focus, .btn-primary:hover { filter: brightness(0.95); }
+
+    .sidebar { min-height: 100vh; background: #fff; border-right: 1px solid #e9e9ef; }
+    .sidebar .nav-link { color: #333; }
+    .sidebar .nav-link.active { background: rgba(var(--primary-rgb), 0.08); color: var(--primary); border-radius: .5rem; }
+
+    .promo-card { border: 1px solid rgba(74,59,199,0.08); border-radius: .75rem; transition: transform .12s ease; }
+    .promo-card:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(74,59,199,0.06); }
+
+    .small-muted { color: var(--muted); font-size: .9rem; }
+    .badge-cat { background: rgba(var(--primary-rgb), 0.12); color: var(--primary); font-weight:600; }
+
+    .copy-chip { cursor:pointer; user-select:all; }
+
+    a:focus, button:focus { outline: 3px solid rgba(var(--primary-rgb), 0.12); outline-offset: 2px; }
+
+    @media (max-width: 767px) {
+      .sidebar { min-height: auto; border-right: none; border-bottom: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand text-white" href="#">
+        <strong>ShoppingGenerico</strong>
+      </a>
+
+      <div class="d-flex align-items-center ms-auto">
+        <form class="d-none d-md-flex me-3" role="search" action="/buscar" method="get" aria-label="Buscar promociones">
+          <input name="q" class="form-control form-control-sm" type="search" placeholder="Buscar promociones..." aria-label="Buscar">
+        </form>
+
+        <div class="dropdown">
+          <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <strong class="me-2"><?php echo htmlspecialchars($_SESSION['Nombre'] ?? 'Usuario'); ?></strong>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="/mis_promociones.php">Mis promociones</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="../Model/logout.php">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+
+      <nav class="col-12 col-md-3 col-lg-2 px-3 sidebar">
+        <div class="pt-3 pb-2">
+          <h6 class="text-muted">Navegación</h6>
+          <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link active" href="#"><i class="bi bi-house-door-fill me-2"></i>Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="./promociones.php">Promociones</a></li>
+            <li class="nav-item"><a class="nav-link" href="./Tienda.php">Tiendas</a></li>
+            <li class="nav-item"><a class="nav-link" href="./Novedades.php">Novedades</a></li>
+
+          </ul>
+        </div>
+
+        <hr>
+
+        <div class="px-2 pb-4">
+          <div class="small-muted mb-2">Tu categoría</div>
+          <div class="d-flex align-items-center">
+            <span class="badge badge-cat py-2 px-3"><?php echo htmlspecialchars($CAT); ?></span>
+            <span class="ms-auto small-muted">Progreso: 2/5</span>
+          </div>
+          <div class="progress mt-2" style="height:8px;">
+            <div class="progress-bar" role="progressbar" style="width:40%; background: linear-gradient(90deg,var(--primary), rgba(var(--primary-rgb),0.85));" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+      </nav>
+
+      <main class="col-12 col-md-9 col-lg-10 py-4">
+        <div class="container-fluid">
+
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-md-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h6 class="mb-1">Promociones disponibles</h6>
+                      <div class="h3 mb-0"><?php echo (int)$numPromosDisponibles; ?></div>
+                      <div class="small-muted">Vigentes y accesibles para tu categoría</div>
+                    </div>
+                    <div>
+                      <i class="bi bi-ticket-perforated" style="font-size:28px; color:var(--primary)"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h6 class="mb-1">Promociones usadas</h6>
+                  <div class="h3 mb-0"><?php echo (int)$numPromosUsadas; ?></div>
+                  <div class="small-muted">Últimos 6 meses</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h6 class="mb-1">Novedades activas</h6>
+                  <div class="h3 mb-0"><?php echo (int)$numNovedadesActivas; ?></div>
+                  <div class="small-muted">Para tu categoría</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row align-items-center mb-3">
+             <div class="col-12 text-md-end mt-2 mt-md-0">
+               <a class="btn btn-primary btn-sm" href="./promociones.php" role="button">Mis Promociones</a>
+               <a class="btn btn-outline-secondary btn-sm ms-2" href="/novedades.php" role="button">Ver Novedades</a>
+             </div>
+          </div>
+
+          <!-- === PROMOS === -->
+          <section class="container my-5">
+            <h2 class="h4 mb-3">Promociones Recomendadas</h2>
+
+            <div class="row g-3" id="promos-container">
+              <?php if ($totalPromos === 0): ?>
+                <p class="text-secondary">No hay promociones disponibles por el momento.</p>
+              <?php else: ?>
+                <?php foreach ($promociones as $i => $p): 
+                  $id          = (int)$p['IDpromocion'];
+                  $desc        = htmlspecialchars($p['descripcion']);
+                  $desde       = htmlspecialchars($p['desde']);
+                  $hasta       = htmlspecialchars($p['hasta']);
+                  $localNombre = htmlspecialchars($p['local_nombre'] ?? '');
+                  $localCodigo = (string)($p['codigo'] ?? $p['localFk']);
+                  $ubicNombre  = htmlspecialchars($p['ubicacion_nombre'] ?? '');
+                  $catMin      = htmlspecialchars($p['categoriaHabilitada'] ?? 'Inicial');
+                  $diaVal      = htmlspecialchars($p['dia'] ?? ''); // numérico
+                ?>
+                <div class="col-md-4 promo-card <?= $i >= 3 ? 'd-none extra-promo' : '' ?>" id="promo-<?= $id ?>">
+                  <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                      <div class="d-flex justify-content-between">
+                        <span class="badge badge-cat"><?= $catMin ?></span>
+                        <small class="text-muted">#<?= $id ?></small>
+                      </div>
+
+                      <h5 class="card-title mt-2"><?= $desc ?></h5>
+                      <p class="card-text text-secondary mb-1">
+                        <i class="bi bi-shop"></i> <?= $localNombre ?>
+                      </p>
+                      <div class="mb-2">
+                        <span class="badge text-bg-light copy-chip" title="Copiar código de local" data-copy="<?= $localCodigo ?>">
+                          Código de local: <?= $localCodigo ?> 📋
+                        </span>
+                      </div>
+
+                      <p class="card-text small mb-2">
+                        Desde <?= $desde ?> hasta <?= $hasta ?>
+                      </p>
+                      <?php if ($ubicNombre): ?>
+                        <span class="badge bg-primary-subtle text-primary mb-3"><?= $ubicNombre ?></span>
+                      <?php endif; ?>
+
+                      <div class="mt-auto d-flex gap-2">
+                        <button 
+                          class="btn btn-outline-secondary btn-sm flex-fill btn-detalle"
+                          data-bs-toggle="modal"
+                          data-bs-target="#detallePromoModal"
+                          data-id="<?= $id ?>"
+                          data-desc="<?= $desc ?>"
+                          data-local="<?= $localNombre ?>"
+                          data-codigo="<?= $localCodigo ?>"
+                          data-desde="<?= $desde ?>"
+                          data-hasta="<?= $hasta ?>"
+                          data-cat="<?= $catMin ?>"
+                          data-dia="<?= $diaVal ?>"
+                          data-ubic="<?= $ubicNombre ?>"
+                        >
+                          Detalle
+                        </button>
+
+                        <button class="btn btn-primary btn-sm flex-fill btn-solicitar" data-id="<?= $id ?>">
+                          Solicitar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </div>
+
+            <?php if ($totalPromos > 3): ?>
+              <div class="text-center mt-3">
+                <button id="btnMostrarMas" class="btn btn-outline-primary">
+                  Mostrar más
+                </button>
+              </div>
+            <?php endif; ?>
+          </section>
+
+          <div class="row mt-4">
+            <div class="col-12 col-lg-6">
+              <div class="card">
+                <div class="card-header">Historial reciente</div>
+                <div class="card-body">
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                      <div>
+                        <div class="fw-bold">Local 2 - 2x1</div>
+                        <div class="small-muted">Usado: 05/10/2025</div>
+                      </div>
+                      <div class="text-end small-muted">Estado: Aceptado</div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card">
+                <div class="card-header">Novedades para ti</div>
+                <div class="card-body">
+                  <article>
+                    <h6>Eventos exclusivos para Premium</h6>
+                    <p class="small-muted">Descripción breve de la novedad... <a href="/novedades.php">Ver más</a></p>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+
+  <div class="modal fade" id="detallePromoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Detalle de la promoción</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <dl class="row mb-0">
+            <dt class="col-5">Local</dt><dd class="col-7" id="m-local"></dd>
+            <dt class="col-5">Descripción</dt><dd class="col-7" id="m-desc"></dd>
+            <dt class="col-5">Vigencia</dt><dd class="col-7"><span id="m-desde"></span> — <span id="m-hasta"></span></dd>
+            <dt class="col-5">Días válidos</dt><dd class="col-7" id="m-dias"></dd>
+            <dt class="col-5">Categoría mínima</dt><dd class="col-7" id="m-cat"></dd>
+            <dt class="col-5">Código de local</dt><dd class="col-7" id="m-codigo" class="copy-chip"></dd>
+            <dt class="col-5">Ubicación</dt><dd class="col-7" id="m-ubic"></dd>
+          </dl>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button class="btn btn-primary" id="m-solicitar" data-id="">Solicitar descuento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastMsg" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastText">Promoción solicitada</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+ 
+  document.getElementById('btnMostrarMas')?.addEventListener('click', function(){
+    document.querySelectorAll('.extra-promo').forEach(el => el.classList.remove('d-none'));
+    this.remove();
+  });
+
+  // Copiar código de local
+  document.addEventListener('click', (e) => {
+    const chip = e.target.closest('.copy-chip');
+    if (chip && chip.dataset.copy){
+      const text = chip.dataset.copy;
+      navigator.clipboard.writeText(text).then(() => showToast('Código copiado: ' + text));
+    }
+  });
+
+ 
+  function diaLabel(d){
+    const n = parseInt(d, 10);
+    const w0 = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];      
+    const w1 = [null,'Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']; 
+    if (!isFinite(n)) return '—';
+    if (n >= 0 && n <= 6) return w0[n];
+    if (n >= 1 && n <= 7) return w1[n];
+    return '—';
+  }
+
+
+  const modal = document.getElementById('detallePromoModal');
+  modal?.addEventListener('show.bs.modal', (ev) => {
+    const btn = ev.relatedTarget;
+    if (!btn) return;
+    const id     = btn.dataset.id;
+    const desc   = btn.dataset.desc || '';
+    const local  = btn.dataset.local || '';
+    const desde  = btn.dataset.desde || '';
+    const hasta  = btn.dataset.hasta || '';
+    const cat    = btn.dataset.cat || '';
+    const codigo = btn.dataset.codigo || '';
+    const ubic   = btn.dataset.ubic || '';
+    const dia    = btn.dataset.dia || '';
+
+    document.getElementById('m-local').textContent  = local;
+    document.getElementById('m-desc').textContent   = desc;
+    document.getElementById('m-desde').textContent  = desde;
+    document.getElementById('m-hasta').textContent  = hasta;
+    document.getElementById('m-cat').textContent    = cat;
+    document.getElementById('m-codigo').textContent = codigo;
+    document.getElementById('m-ubic').textContent   = ubic || '—';
+    document.getElementById('m-dias').textContent   = diaLabel(dia);
+
+    const btnSolicitarModal = document.getElementById('m-solicitar');
+    btnSolicitarModal.dataset.id = id;
+  });
+
+  // Acción SOLICITAR (cards y modal)
+  document.addEventListener('click', async (e) => {
+    const btnCard = e.target.closest('.btn-solicitar');
+    const btnModal = e.target.id === 'm-solicitar' ? e.target : null;
+    const id = btnCard?.dataset.id || btnModal?.dataset.id;
+    if (!id) return;
+
+    (btnCard || btnModal).disabled = true;
+
+    try{
+      const res = await fetch('../Model/ProcesarDashboardCliente.php', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action:'solicitar', idPromocion:id })
+      });
+      const data = await res.json();
+
+      if (data.ok){
+        // remover card
+        const card = document.getElementById('promo-' + id);
+        card?.remove();
+        // cerrar modal si vino desde el modal
+        if (btnModal){
+          const instance = bootstrap.Modal.getInstance(document.getElementById('detallePromoModal'));
+          instance?.hide();
+        }
+        showToast('Promoción solicitada');
+      }else{
+        showToast(data.msg || 'No se pudo solicitar', true);
+        (btnCard || btnModal).disabled = false;
+      }
+    }catch{
+      showToast('Error de red', true);
+      (btnCard || btnModal).disabled = false;
+    }
+  });
+
+  function showToast(text, isError=false){
+    const toastEl = document.getElementById('toastMsg');
+    const body    = document.getElementById('toastText');
+    body.textContent = text;
+    toastEl.classList.toggle('text-bg-danger', !!isError);
+    toastEl.classList.toggle('text-bg-success', !isError);
+    new bootstrap.Toast(toastEl).show();
+  }
+  </script>
+</body>
+</html>

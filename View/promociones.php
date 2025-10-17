@@ -184,6 +184,7 @@ function formatearDias($valor) {
     });
   </script>
   <?php include 'C:\xampp\htdocs\TPIShopping\layouts\footer.php'; ?>
+  
 
 </body>
 </html>

@@ -1,5 +1,5 @@
 <?php
-    /*include_once ("funciones.php");
+/*include_once ("funciones.php");
     session_start();
 
     $email=trim($_POST["mail"]);
@@ -49,24 +49,35 @@
     header("location: login.php");
     exit();*/
 
-   
+
 // Archivo: Controller/LoginController.php
 
 include_once("../Model/conexion.php");
 
-function checkCredentials($email, $password) {
+function checkCredentials($email, $password)
+{
     $pdo = getConnection();
-    
-    $sql = "SELECT * FROM usuario WHERE email = :email and clave = :psswd LIMIT 1";
+
+    $sql = "
+   SELECT 
+  u.*,
+  r.IDrol        AS rol_id,
+  r.nombre       AS rol_nombre,
+  c.IDcategoria  AS categoria_id,
+  c.nombre       AS categoria_nombre,
+  c.descripcion  AS categoria_descripcion
+FROM usuario AS u
+JOIN rol       AS r ON r.IDrol       = u.tipoFK
+JOIN categoria AS c ON c.IDcategoria = u.categoriaFK
+WHERE u.email = :email
+LIMIT 1;
+";
     $stmt = $pdo->prepare($sql);
-    
-    $stmt->execute(['email' => $email, 'psswd' => $password]);
+
+    $stmt->execute(['email' => $email]);
 
     $user = $stmt->fetch();
+   
+
     return $user;
 }
-
-
-?>
-
-
