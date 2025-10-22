@@ -14,7 +14,7 @@ $numPromosUsadas      = getPromocionesUsadasPorCliente($IDU);
 $numNovedadesActivas  = getNovedadesPorCategoria($CAT);
 $promociones          = getPromocionesPorCategoria($CAT, $IDU);
 $historialUso         = getHistorialUsoCliente($IDU, 8); 
-$novedadesRecientes   = getNovedadesRecientesPorCategoria($CAT, 8); // Nueva función
+$novedadesRecientes   = getNovedadesRecientesPorCategoria($CAT, 8);
 $totalPromos          = count($promociones);
 ?>
 

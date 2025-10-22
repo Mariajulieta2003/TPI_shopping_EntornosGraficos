@@ -1,0 +1,58 @@
+:root{
+      --primary: #4A3BC7;
+      --primary-rgb: 74,59,199;
+      --subtle: #F3F1FF;
+      --muted: #6c6c6c;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+    }
+
+    body { background: linear-gradient(180deg, #fff 0%, var(--subtle) 100%); }
+    .navbar, .card-header { background: var(--primary); color: #fff; }
+    .btn-primary { background: var(--primary); border-color: rgba(var(--primary-rgb), 0.9); }
+    .btn-primary:focus, .btn-primary:hover { filter: brightness(0.95); }
+
+    .sidebar { min-height: 100vh; background: #fff; border-right: 1px solid #e9e9ef; }
+    .sidebar .nav-link { color: #333; }
+    .sidebar .nav-link.active { background: rgba(var(--primary-rgb), 0.08); color: var(--primary); border-radius: .5rem; }
+
+    .promo-card { border: 1px solid rgba(74,59,199,0.08); border-radius: .75rem; transition: transform .12s ease; }
+    .promo-card:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(74,59,199,0.06); }
+
+    .small-muted { color: var(--muted); font-size: .9rem; }
+    .badge-cat { background: rgba(var(--primary-rgb), 0.12); color: var(--primary); font-weight:600; }
+
+    /* Estilos para listas */
+    .promocion-item, .solicitud-item {
+        border-left: 4px solid var(--primary);
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .estado-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .estado-pendiente { background-color: var(--warning); color: #000; }
+    .estado-aceptado { background-color: var(--success); color: #fff; }
+    .estado-rechazado { background-color: var(--danger); color: #fff; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted);
+    }
+
+    .usos-badge {
+        background-color: rgba(var(--primary-rgb), 0.1);
+        color: var(--primary);
+        font-size: 0.75rem;
+    }
+
+    a:focus, button:focus { outline: 3px solid rgba(var(--primary-rgb), 0.12); outline-offset: 2px; }
+
+    @media (max-width: 767px) {
+      .sidebar { min-height: auto; border-right: none; border-bottom: 1px solid #eee; }
+    }

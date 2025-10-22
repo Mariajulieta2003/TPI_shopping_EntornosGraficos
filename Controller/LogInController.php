@@ -33,13 +33,13 @@ try {
 
             switch($user['rol_id']) {
                 case 0:
-                    $Ruta = 'DashboardAdmin';
+                    $Ruta = 'DashboardAdmin.php';
                     break;
                 case 1:
                     $Ruta = 'DashBoardCliente.php';
                     break;
                 case 2:
-                    $Ruta = 'DashboardTienda';
+                    $Ruta = 'DashboardTienda.php';
                     break;
             }
             echo json_encode([
