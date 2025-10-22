@@ -38,7 +38,7 @@ CREATE TABLE `categoria` (
 
 LOCK TABLES `categoria` WRITE;
 /*!40000 ALTER TABLE `categoria` DISABLE KEYS */;
-INSERT INTO `categoria` VALUES (1,'usuario que hiso mas de 3 compras mensuales','medio'),(2,'usuario que tiene mas de 5 compras  mensuales','avanzado'),(3,'usuario con mas de  10 compras  mensuales','rockstar'),(4,'usuario  registrado','basico');
+INSERT INTO `categoria` VALUES (1,'usuario que hiso mas de 3 compras mensuales','Inicial'),(2,'usuario que tiene mas de 5 compras  mensuales','Premium'),(4,'usuario  registrado','Medium');
 /*!40000 ALTER TABLE `categoria` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -55,12 +55,13 @@ CREATE TABLE `local` (
   `rubro` varchar(45) NOT NULL,
   `usuarioFK` int NOT NULL,
   `ubicacionFK` int DEFAULT NULL,
+  `codigo` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`IDlocal`),
   KEY `usuario-local_idx` (`usuarioFK`),
   KEY `local-ubicacion_idx` (`ubicacionFK`),
   CONSTRAINT `local-ubicacion` FOREIGN KEY (`ubicacionFK`) REFERENCES `ubicacion` (`IDubicacion`),
   CONSTRAINT `usuario-local` FOREIGN KEY (`usuarioFK`) REFERENCES `usuario` (`IDusuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -69,7 +70,7 @@ CREATE TABLE `local` (
 
 LOCK TABLES `local` WRITE;
 /*!40000 ALTER TABLE `local` DISABLE KEYS */;
-INSERT INTO `local` VALUES (1,'Local 2','vende ojotas',2,2),(2,'Local 1','vender mates',9,1);
+INSERT INTO `local` VALUES (1,'Local 2','vende ojotas',2,2,'Local1336'),(2,'Local 1','vender mates',9,1,'Local11233'),(3,'local 3','vvender zapatos',10,3,'Local33455'),(4,'local4','venta de rifas de chanchos',1,4,'lcoal45678');
 /*!40000 ALTER TABLE `local` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -90,7 +91,7 @@ CREATE TABLE `novedad` (
   `cuerpo` varchar(7000) DEFAULT NULL,
   `imagen` blob,
   PRIMARY KEY (`IDnovedad`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -99,6 +100,7 @@ CREATE TABLE `novedad` (
 
 LOCK TABLES `novedad` WRITE;
 /*!40000 ALTER TABLE `novedad` DISABLE KEYS */;
+INSERT INTO `novedad` VALUES (1,'2025-10-16','2025-10-25','Premium','retgrtgrthrtyhrtyhrhrthrt','Novedad deeeee......','el cuerpo explicando todo',NULL),(2,'2025-10-16','2025-10-28','Inicial','dsdsdsd','sdsdsdsdsdsdsd','dsdsdsdsdsdsdsdsddsd',NULL),(3,'2025-10-16','2025-10-29','Medium','dsdfsdfsdf','sdfsfddsfsd','sdfsdfsfsf',NULL),(4,'2025-10-16','2025-10-27','Inicial','edfwefwef','wedwefdwed','wedwedwe',NULL);
 /*!40000 ALTER TABLE `novedad` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -121,7 +123,7 @@ CREATE TABLE `promocion` (
   PRIMARY KEY (`IDpromocion`),
   KEY `local-promocion_idx` (`localFk`),
   CONSTRAINT `promocion-local` FOREIGN KEY (`localFk`) REFERENCES `local` (`IDlocal`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -130,6 +132,7 @@ CREATE TABLE `promocion` (
 
 LOCK TABLES `promocion` WRITE;
 /*!40000 ALTER TABLE `promocion` DISABLE KEYS */;
+INSERT INTO `promocion` VALUES (1,'descripcion promocion 1','2025-10-15','2025-10-30','Medium',2,'1',1),(2,'descripcion promocion 2','2025-10-15','2025-10-28','Premium',4,'1',2),(3,'Descripcion deun apromocion ','2025-10-15','2025-10-30','inicial',4,'1',3),(4,'Descripcion de prueba ','2025-10-15','2025-11-05','inicial',2,'1',2),(5,'descripcion de otra promo de otra tienda','2025-10-15','2025-11-05','inicial',2,'1',1),(6,'descripcion de otra promo de otra tienda','2025-10-15','2025-11-05','inicial',3,'1',3),(7,'Prueba desde el formulario','2025-10-22','2025-11-22','Inicial',5,'1',3);
 /*!40000 ALTER TABLE `promocion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -179,7 +182,7 @@ CREATE TABLE `solicitud` (
   `ubicacion` int NOT NULL,
   `nombreLocal` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`IDsolicitud`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -188,6 +191,7 @@ CREATE TABLE `solicitud` (
 
 LOCK TABLES `solicitud` WRITE;
 /*!40000 ALTER TABLE `solicitud` DISABLE KEYS */;
+INSERT INTO `solicitud` VALUES (1,'erer','20433492812','Hipolito la barba','labarbahipolito@gmail.com','$2y$10$If1yZZPQPo9x.UGiUZjjxOBjI8tZ7AstQejFmMoEO8kASrbyUZ8mK','43349281','Masculino','3436448814',1,'rerer'),(2,'ddwdw','20433492812','Hipolito la barba','labarbahipolito@gmail.com','$2y$10$J7n8h8/e7oxwoRZkYklLnOR9kr1LFFuFFunjB.cfO/8AHx8KjClH2','43349281','Femenino','3436448814',3,'dwdwdw'),(3,'wewew','20433492812','Hipolito la barba','labarbahipolito@gmail.com','$2y$10$JqZqKbdzwzjLKoefZYiL8u2zDRQEMd6miYw5W67pTr8F.2F36jWIO','43349281','Masculino','3436448814',2,'wewewe');
 /*!40000 ALTER TABLE `solicitud` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -204,7 +208,7 @@ CREATE TABLE `ubicacion` (
   `Descripcion` varchar(500) NOT NULL,
   `estado` int NOT NULL,
   PRIMARY KEY (`IDubicacion`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -213,7 +217,7 @@ CREATE TABLE `ubicacion` (
 
 LOCK TABLES `ubicacion` WRITE;
 /*!40000 ALTER TABLE `ubicacion` DISABLE KEYS */;
-INSERT INTO `ubicacion` VALUES (1,'Local-1 planta baja','descripcion1',0),(2,'local-2 planta baja','descripcion2',0),(3,'local-3 planta alta','descripcion3',0);
+INSERT INTO `ubicacion` VALUES (1,'Local-1 planta baja','descripcion1',0),(2,'local-2 planta baja','descripcion2',0),(3,'local-3 planta alta','descripcion3',0),(4,'local-4 planta media','descripcion 5',0);
 /*!40000 ALTER TABLE `ubicacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -242,6 +246,7 @@ CREATE TABLE `usopromocion` (
 
 LOCK TABLES `usopromocion` WRITE;
 /*!40000 ALTER TABLE `usopromocion` DISABLE KEYS */;
+INSERT INTO `usopromocion` VALUES (9,3,'2025-10-16','1'),(9,6,'2025-10-22','1'),(10,3,'2025-10-22','0');
 /*!40000 ALTER TABLE `usopromocion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -277,7 +282,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (1,'admin','admin@admin.com','Admin123','3436448814','Masculino',0,1,1,'43349281'),(2,'Hipolito la barba','labarbahipolito@gmail.com','Operacion9','3436448814','Masculino',1,1,1,'43349281'),(9,'Hipolito la barba','labarbahipolito7@gmail.com','$2y$10$ifopBS61YjpKxRJVF.THSOwck0qFcmsdmiB9PyuBErvGF0ZjlylTS','03436448814','Masculino',1,1,0,'43349281'),(10,'Hipolito la barba','sitare8285@dotxan.com','$2y$10$OxIN0n.VvGLd6Ke7UrJyt.1Z0xxO3neaS8JDJ61AveVomheK5sBuS','03436448814','Masculino',1,1,1,'43349281');
+INSERT INTO `usuario` VALUES (1,'admin','admin@admin.com','Admin123','3436448814','Masculino',0,1,1,'43349281'),(2,'Hipolito la barba','labarbahipolito@gmail.com','Operacion9','3436448814','Masculino',1,1,1,'43349281'),(9,'Hipolito la barba','labarbahipolito7@gmail.com','$2y$10$ifopBS61YjpKxRJVF.THSOwck0qFcmsdmiB9PyuBErvGF0ZjlylTS','03436448814','Masculino',1,1,1,'43349281'),(10,'Hipolito la barba','tienda@gmail.com','$2y$10$OxIN0n.VvGLd6Ke7UrJyt.1Z0xxO3neaS8JDJ61AveVomheK5sBuS','03436448814','Masculino',2,1,1,'43349281');
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -290,4 +295,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-14 19:36:01
+-- Dump completed on 2025-10-21 23:59:31

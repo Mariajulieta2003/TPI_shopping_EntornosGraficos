@@ -1,7 +1,8 @@
 <?php
-session_start();
 
-require_once '../Model/ProcesarDashboardTienda.php';
+require_once '../Controller/DashboardTiendaController.php';
+
+
 
 $IDU = (int)$_SESSION['IDusuario'];
 $local = getLocalPorUsuario($IDU);
@@ -16,8 +17,9 @@ $rubroLocal = $local['rubro'];
 $estadisticas = getEstadisticasLocal($idLocal);
 $promociones = getPromocionesPorLocal($idLocal);
 $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
-?>
 
+
+?>
 <!doctype html>
 <html lang="es">
 <head>
@@ -103,7 +105,7 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
             <strong class="me-2"><?php echo htmlspecialchars($_SESSION['Nombre'] ?? 'Usuario'); ?></strong>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item" href="./DashBoardLocal.php">Inicio</a></li>
+            <li><a class="dropdown-item" href="./DashBoardTienda.php">Inicio</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="../Model/logout.php">Cerrar sesión</a></li>
           </ul>
@@ -119,9 +121,14 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
         <div class="pt-3 pb-2">
           <h6 class="text-muted">Navegación</h6>
           <ul class="nav flex-column">
-            <li class="nav-item"><a class="nav-link active" href="#"><i class="bi bi-house-door-fill me-2"></i>Inicio</a></li>
-            <li class="nav-item"><a class="nav-link" href="./CrearPromocion.php">Crear promoción</a></li>
-            <li class="nav-item"><a class="nav-link" href="./GestionarPromociones.php">Gestionar promociones</a></li>
+            <li class="nav-item"><a class="nav-link active" href="./DashboardTienda.php"><i class="bi bi-house-door-fill me-2"></i>Inicio</a></li>
+            <li class="nav-item">
+                            <a class="nav-link " href="./CrearPromocion.php">
+                                <i class="bi bi-plus-circle me-2"></i>Crear Promoción
+                            </a>
+                        </li>
+            <li class="nav-item"><a class="nav-link" href="./HistorialUsos.php">Historial</a></li>
+            <li class="nav-item"><a class="nav-link" href="mailto:admin@shoppinggenerico.com?subject=Consulta%20desde%20el%20dashboard&body=Hola%20administrador,%0A%0A%20Tengo%20una%20consulta%20sobre...">Contactar Administrador</a></li>
           </ul>
         </div>
 
@@ -317,21 +324,25 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
     </div>
   </div>
 
-  <!-- Modal de confirmación para eliminar promoción -->
   <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Confirmar eliminación</h5>
+          <h5 class="modal-title">Desactivar Promoción</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">
-          <p>¿Estás seguro de que deseas eliminar la promoción: <strong id="promocionNombre"></strong>?</p>
-          <p class="text-danger">Esta acción no se puede deshacer.</p>
+          <p>¿Estás seguro de que deseas desactivar la promoción: <strong id="promocionNombre"></strong>?</p>
+          <p class="text-warning">
+            <i class="bi bi-exclamation-triangle"></i> 
+            La promoción se desactivará y ya no estará disponible para los clientes.
+          </p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+          <button type="button" class="btn btn-warning" id="confirmarEliminar">
+            <i class="bi bi-eye-slash me-1"></i>Desactivar
+          </button>
         </div>
       </div>
     </div>
@@ -348,36 +359,58 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Eliminar promoción
+    // Eliminar promoción (desactivar)
     document.querySelectorAll('.btn-eliminar-promocion').forEach(button => {
       button.addEventListener('click', function() {
         const id = this.dataset.id;
         const desc = this.dataset.desc;
         document.getElementById('promocionNombre').textContent = desc;
         const modal = new bootstrap.Modal(document.getElementById('confirmarEliminarModal'));
-        modal.show();
-
-        document.getElementById('confirmarEliminar').onclick = function() {
-          fetch('../Model/ProcesarDashboardLocal.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ action: 'eliminar_promocion', idPromocion: id })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              showToast(data.message);
-              // Recargar la página después de un breve tiempo
-              setTimeout(() => location.reload(), 1000);
-            } else {
-              showToast(data.message, true);
+        
+        // Limpiar evento anterior
+        document.getElementById('confirmarEliminar').onclick = null;
+        
+        // Configurar nuevo evento
+        document.getElementById('confirmarEliminar').onclick = async function() {
+          const confirmBtn = this;
+          confirmBtn.disabled = true;
+          confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Procesando...';
+          
+          try {
+            const response = await fetch('../Controller/DashboardTiendaController.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({ 
+                action: 'eliminar_promocion', 
+                idPromocion: id 
+              })
+            });
+            
+            if (!response.ok) {
+              throw new Error(`Error HTTP: ${response.status}`);
             }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de red', true);
-          });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              showToast('✅ ' + data.message);
+              modal.hide();
+              // Recargar después de mostrar el toast
+              setTimeout(() => location.reload(), 1500);
+            } else {
+              showToast('❌ ' + (data.message || 'Error al desactivar la promoción'), true);
+              confirmBtn.disabled = false;
+              confirmBtn.innerHTML = '<i class="bi bi-eye-slash me-1"></i>Desactivar';
+            }
+          } catch (error) {
+            console.error('Error completo:', error);
+            showToast('❌ Error de conexión. Verifica tu internet e intenta nuevamente.', true);
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-eye-slash me-1"></i>Desactivar';
+          }
         };
+        
+        modal.show();
       });
     });
 
@@ -388,7 +421,7 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
         const promoFK = this.dataset.promocion;
         
         if (confirm('¿Estás seguro de que deseas ACEPTAR esta solicitud?')) {
-          fetch('../Model/ProcesarDashboardLocal.php', {
+          fetch('../Controller/DashboardTiendaController.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ action: 'aceptar_solicitud', usuarioFk: usuarioFk, promoFK: promoFK })
@@ -404,7 +437,7 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
           })
           .catch(error => {
             console.error('Error:', error);
-            showToast('Error de red', true);
+            showToast('Error de red. Por favor, intenta nuevamente.', true);
           });
         }
       });
@@ -417,7 +450,7 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
         const promoFK = this.dataset.promocion;
         
         if (confirm('¿Estás seguro de que deseas RECHAZAR esta solicitud?')) {
-          fetch('../Model/ProcesarDashboardLocal.php', {
+          fetch('../Controller/DashboardTiendaController.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ action: 'rechazar_solicitud', usuarioFk: usuarioFk, promoFK: promoFK })
@@ -433,7 +466,7 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
           })
           .catch(error => {
             console.error('Error:', error);
-            showToast('Error de red', true);
+            showToast('Error de red. Por favor, intenta nuevamente.', true);
           });
         }
       });

@@ -1,7 +1,5 @@
 <?php
-// ProcesarDashboardLocal.php
-
-include_once("../Model/conexion.php");
+require_once '../Model/conexion.php';
 
 // Obtener el local del dueño
 function getLocalPorUsuario($idUsuario) {
@@ -12,7 +10,7 @@ function getLocalPorUsuario($idUsuario) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Obtener promociones del local
+// Obtener promociones del local (solo activas)
 function getPromocionesPorLocal($idLocal) {
     $pdo = getConnection();
     $query = "
@@ -27,7 +25,7 @@ function getPromocionesPorLocal($idLocal) {
             COUNT(up.promoFK) as total_usos
         FROM promocion p
         LEFT JOIN usopromocion up ON p.IDpromocion = up.promoFK AND up.estado = 1
-        WHERE p.localFk = ?
+        WHERE p.localFk = ? AND p.estado = 1
         GROUP BY p.IDpromocion
         ORDER BY p.desde DESC
     ";
@@ -98,10 +96,10 @@ function getEstadisticasLocal($idLocal) {
     ];
 }
 
-// Eliminar promoción
+// Eliminar promoción (baja lógica - estado = 0)
 function eliminarPromocion($idPromocion, $idLocal) {
     $pdo = getConnection();
-    $query = "DELETE FROM promocion WHERE IDpromocion = ? AND localFk = ?";
+    $query = "UPDATE promocion SET estado = 0 WHERE IDpromocion = ? AND localFk = ?";
     $stmt = $pdo->prepare($query);
     return $stmt->execute([$idPromocion, $idLocal]);
 }
@@ -114,44 +112,8 @@ function actualizarEstadoSolicitud($usuarioFk, $promoFK, $estado) {
     return $stmt->execute([$estado, $usuarioFk, $promoFK]);
 }
 
-// Procesar acciones POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    session_start();
-    $idUsuario = $_SESSION['IDusuario'];
-    $local = getLocalPorUsuario($idUsuario);
-    $idLocal = $local['IDlocal'];
 
-    if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'eliminar_promocion':
-                $idPromocion = $_POST['idPromocion'];
-                if (eliminarPromocion($idPromocion, $idLocal)) {
-                    echo json_encode(['success' => true, 'message' => 'Promoción eliminada correctamente.']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al eliminar la promoción.']);
-                }
-                exit;
 
-            case 'aceptar_solicitud':
-                $usuarioFk = $_POST['usuarioFk'];
-                $promoFK = $_POST['promoFK'];
-                if (actualizarEstadoSolicitud($usuarioFk, $promoFK, 1)) {
-                    echo json_encode(['success' => true, 'message' => 'Solicitud aceptada.']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al aceptar la solicitud.']);
-                }
-                exit;
 
-            case 'rechazar_solicitud':
-                $usuarioFk = $_POST['usuarioFk'];
-                $promoFK = $_POST['promoFK'];
-                if (actualizarEstadoSolicitud($usuarioFk, $promoFK, 2)) {
-                    echo json_encode(['success' => true, 'message' => 'Solicitud rechazada.']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al rechazar la solicitud.']);
-                }
-                exit;
-        }
-    }
-}
+
 ?>
