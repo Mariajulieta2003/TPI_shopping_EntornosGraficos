@@ -1,16 +1,9 @@
 <?php
-// Model/promocionesModel.php
-// Usa getConnection() de tu conexion.php y expone funciones simples.
+
 
 include_once("../Model/conexion.php");
 
-/**
- * Quienes pueden usar la promo según su categoría mínima.
- * - Inicial  => Inicial, Medium, Premium
- * - Medium   => Medium,  Premium
- * - Premium  => Premium
- * - null/otro=> Todos
- */
+
 function categoriasPermitidas(?string $min): array {
     $min = $min ? strtolower(trim($min)) : '';
     switch ($min) {
@@ -21,11 +14,6 @@ function categoriasPermitidas(?string $min): array {
     }
 }
 
-/**
- * Lista promociones vigentes (hoy entre desde y hasta), unidas al local,
- * ordenadas por nivel de categoriaHabilitada: Inicial < Medium < Premium.
- * Sin filtros extra, sin fotos.
- */
 function listarPromocionesVigentes(int $limit = 50): array {
     $pdo = getConnection();
 
@@ -72,3 +60,41 @@ function listarPromocionesVigentes(int $limit = 50): array {
     return $rows;
 }
 
+function listarPromocionesVigentesCategoria(string $categoria, int $limit = 50): array {
+    $pdo = getConnection();
+ #filtrar por categoria
+    $sql = "
+        SELECT
+            p.IDpromocion,
+            p.descripcion,
+            p.desde,
+            p.hasta,
+            p.categoriaHabilitada,
+            p.dia,
+            p.estado,
+            l.IDlocal,
+            l.nombre AS local_nombre,
+            l.rubro  AS local_rubro
+        FROM promocion p
+        INNER JOIN `local` l ON l.IDlocal = p.localFk
+        WHERE CURDATE() BETWEEN p.desde AND p.hasta
+        AND (p.categoriaHabilitada = :categoria )
+       
+        LIMIT :lim
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':categoria', $categoria, PDO::PARAM_STR);
+    $stmt->execute();
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    
+    foreach ($rows as &$r) {
+        $r['categorias_permitidas'] = categoriasPermitidas($r['categoriaHabilitada'] ?? null);
+    }
+    unset($r);
+
+    return $rows;
+}

@@ -1,9 +1,49 @@
 <?php
 // novedades.php — listado de novedades con modal de detalle
 include("../Model/ListarNovedades.php");
-$novedades = listarNovedadesVigentes(30);
 
-function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+session_start();
+if (isset($_SESSION['Categoria'])) {
+    $novedades = listarNovedadesVigentesCategoria($_SESSION['Categoria'], 50);
+} else {
+  $novedades = listarNovedadesVigentes(30);
+
+}
+
+// ==== FIX: h() tolerante a arrays/objetos ====
+function h($v): string
+{
+    if ($v === null) return '';
+
+    // Escalares (int, float, string, bool)
+    if (is_scalar($v)) {
+        return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+    }
+
+    // Arrays: unir por coma (si hay anidados/object, los serializa a JSON)
+    if (is_array($v)) {
+        $items = [];
+        foreach ($v as $item) {
+            if (is_scalar($item) || (is_object($item) && method_exists($item, '__toString'))) {
+                $items[] = htmlspecialchars((string)$item, ENT_QUOTES, 'UTF-8');
+            } else {
+                $json = json_encode($item, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $items[] = htmlspecialchars($json !== false ? $json : '', ENT_QUOTES, 'UTF-8');
+            }
+        }
+        return implode(', ', $items);
+    }
+
+    // Objetos stringeables
+    if (is_object($v) && method_exists($v, '__toString')) {
+        return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+    }
+
+    // Fallback: JSON
+    $json = json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    return $json === false ? '' : htmlspecialchars($json, ENT_QUOTES, 'UTF-8');
+}
+
 function recorte($txt, $len=160){ return h(mb_strimwidth((string)$txt, 0, $len, '…', 'UTF-8')); }
 ?>
 <!doctype html>
@@ -64,7 +104,7 @@ function recorte($txt, $len=160){ return h(mb_strimwidth((string)$txt, 0, $len, 
             $cuerpo     = $n['cuerpo'] ?? '';
             $desde      = $n['desde'] ?? '';
             $hasta      = $n['hasta'] ?? '';
-            $visiblePara= $n['usuarioHabilitado'] ?: 'Todos';
+            $visiblePara= $n['categorias_permitidas'] ?: 'Todos';
           ?>
           <article class="card news-card shadow-sm border-0 mb-3">
             <div class="card-body d-flex flex-column flex-lg-row align-items-lg-center gap-3">
@@ -147,7 +187,7 @@ function recorte($txt, $len=160){ return h(mb_strimwidth((string)$txt, 0, $len, 
       document.getElementById('mCuerpo').textContent      = get('data-cuerpo') || '—';
     });
   </script>
-  <?php if (!isset($_SESSION['IDusuario'])): ?>
+  <?php if (isset($_SESSION['IDusuario'])): ?>
 <script src="../layouts/JS/OcultarBoton.js" ></script>
 <?php endif; ?>
 </body>

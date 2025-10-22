@@ -6,15 +6,18 @@ if (!isset($_SESSION['IDusuario'])) {
 }
 require_once '../Model/ProcesarDashboardCliente.php';
 
-$CAT = $_SESSION['Categoria'] ?? 'Inicial';
+$CAT = $_SESSION['Categoria'];
 $IDU = (int)($_SESSION['IDusuario'] ?? 0);
 
 $numPromosDisponibles = getPromocionesDisponiblesPorCategoria($CAT);
 $numPromosUsadas      = getPromocionesUsadasPorCliente($IDU);
 $numNovedadesActivas  = getNovedadesPorCategoria($CAT);
-$promociones          = getPromocionesPorCategoria($CAT, $IDU); // ← pasa ID usuario
+$promociones          = getPromocionesPorCategoria($CAT, $IDU);
+$historialUso         = getHistorialUsoCliente($IDU, 8); 
+$novedadesRecientes   = getNovedadesRecientesPorCategoria($CAT, 8); // Nueva función
 $totalPromos          = count($promociones);
 ?>
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -32,6 +35,8 @@ $totalPromos          = count($promociones);
       --subtle: #F3F1FF;
       --muted: #6c6c6c;
       --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
     }
 
     body { background: linear-gradient(180deg, #fff 0%, var(--subtle) 100%); }
@@ -50,6 +55,35 @@ $totalPromos          = count($promociones);
     .badge-cat { background: rgba(var(--primary-rgb), 0.12); color: var(--primary); font-weight:600; }
 
     .copy-chip { cursor:pointer; user-select:all; }
+
+    /* Estilos para el historial y novedades */
+    .historial-item, .novedad-item {
+        border-left: 4px solid var(--primary);
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .estado-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .estado-pendiente { background-color: var(--warning); color: #000; }
+    .estado-aceptado { background-color: var(--success); color: #fff; }
+    .estado-rechazado { background-color: var(--danger); color: #fff; }
+    
+    .historial-empty, .novedades-empty {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted);
+    }
+
+    .novedad-badge {
+        background-color: rgba(var(--primary-rgb), 0.1);
+        color: var(--primary);
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
 
     a:focus, button:focus { outline: 3px solid rgba(var(--primary-rgb), 0.12); outline-offset: 2px; }
 
@@ -76,7 +110,7 @@ $totalPromos          = count($promociones);
             <strong class="me-2"><?php echo htmlspecialchars($_SESSION['Nombre'] ?? 'Usuario'); ?></strong>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item" href="/mis_promociones.php">Mis promociones</a></li>
+            <li><a class="dropdown-item" href="./PromocionesCliente.php">Mis promociones</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="../Model/logout.php">Cerrar sesión</a></li>
           </ul>
@@ -93,10 +127,9 @@ $totalPromos          = count($promociones);
           <h6 class="text-muted">Navegación</h6>
           <ul class="nav flex-column">
             <li class="nav-item"><a class="nav-link active" href="#"><i class="bi bi-house-door-fill me-2"></i>Inicio</a></li>
-            <li class="nav-item"><a class="nav-link" href="./promociones.php">Promociones</a></li>
+            <li class="nav-item"><a class="nav-link" href="./PromocionesCliente.php">Promociones</a></li>
             <li class="nav-item"><a class="nav-link" href="./Tienda.php">Tiendas</a></li>
             <li class="nav-item"><a class="nav-link" href="./Novedades.php">Novedades</a></li>
-
           </ul>
         </div>
 
@@ -158,8 +191,8 @@ $totalPromos          = count($promociones);
           
           <div class="row align-items-center mb-3">
              <div class="col-12 text-md-end mt-2 mt-md-0">
-               <a class="btn btn-primary btn-sm" href="./promociones.php" role="button">Mis Promociones</a>
-               <a class="btn btn-outline-secondary btn-sm ms-2" href="/novedades.php" role="button">Ver Novedades</a>
+               <a class="btn btn-primary btn-sm" href="./PromocionesUsuario.php" role="button">Mis Promociones</a>
+               <a class="btn btn-outline-secondary btn-sm ms-2" href="./Novedades.php" role="button">Ver Novedades</a>
              </div>
           </div>
 
@@ -246,31 +279,125 @@ $totalPromos          = count($promociones);
           </section>
 
           <div class="row mt-4">
+            <!-- === HISTORIAL DE USO === -->
             <div class="col-12 col-lg-6">
               <div class="card">
-                <div class="card-header">Historial reciente</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <span>Historial de uso</span>
+                </div>
                 <div class="card-body">
-                  <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-start">
-                      <div>
-                        <div class="fw-bold">Local 2 - 2x1</div>
-                        <div class="small-muted">Usado: 05/10/2025</div>
-                      </div>
-                      <div class="text-end small-muted">Estado: Aceptado</div>
-                    </li>
-                  </ul>
+                  <?php if (empty($historialUso)): ?>
+                    <div class="historial-empty">
+                      <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
+                      <p class="mt-2 mb-0">No hay historial de uso</p>
+                      <small class="text-muted">Tus promociones solicitadas aparecerán aquí</small>
+                    </div>
+                  <?php else: ?>
+                    <div class="historial-list">
+                      <?php foreach ($historialUso as $historial): ?>
+                        <div class="historial-item">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h6 class="mb-0"><?php echo htmlspecialchars($historial['descripcion_promo']); ?></h6>
+                            <?php
+                            $estado = $historial['estado'];
+                            $badgeClass = '';
+                            $badgeText = '';
+                            
+                            if ($estado == 0) {
+                                $badgeClass = 'estado-pendiente';
+                                $badgeText = '⏳ Pendiente';
+                            } elseif ($estado == 1) {
+                                $badgeClass = 'estado-aceptado';
+                                $badgeText = '✅ Aceptado';
+                            } else {
+                                $badgeClass = 'estado-rechazado';
+                                $badgeText = '❌ Rechazado';
+                            }
+                            ?>
+                            <span class="badge estado-badge <?php echo $badgeClass; ?>">
+                              <?php echo $badgeText; ?>
+                            </span>
+                          </div>
+                          <p class="small text-muted mb-1">
+                            <i class="bi bi-shop me-1"></i>
+                            <?php echo htmlspecialchars($historial['nombre_local']); ?>
+                          </p>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                              <i class="bi bi-calendar me-1"></i>
+                              <?php echo date('d/m/Y', strtotime($historial['fechaUso'])); ?>
+                            </small>
+                            <small class="text-muted">
+                              <?php echo htmlspecialchars($historial['categoriaHabilitada']); ?>
+                            </small>
+                          </div>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
 
+            <!-- === NOVEDADES PARA TI === -->
             <div class="col-12 col-lg-6">
               <div class="card">
-                <div class="card-header">Novedades para ti</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <span>Novedades para ti</span>
+                  <a href="./Novedades.php" class="btn btn-outline-primary btn-sm">Ver todo</a>
+                </div>
                 <div class="card-body">
-                  <article>
-                    <h6>Eventos exclusivos para Premium</h6>
-                    <p class="small-muted">Descripción breve de la novedad... <a href="/novedades.php">Ver más</a></p>
-                  </article>
+                  <?php if (empty($novedadesRecientes)): ?>
+                    <div class="novedades-empty">
+                      <i class="bi bi-megaphone" style="font-size: 2rem;"></i>
+                      <p class="mt-2 mb-0">No hay novedades recientes</p>
+                      <small class="text-muted">Las novedades para tu categoría aparecerán aquí</small>
+                    </div>
+                  <?php else: ?>
+                    <div class="novedades-list">
+                      <?php foreach ($novedadesRecientes as $novedad): ?>
+                        <div class="novedad-item">
+                          <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0"><?php echo htmlspecialchars($novedad['cabecera'] ?? 'Sin título'); ?></h6>
+                            <span class="badge novedad-badge">
+                              <?php echo htmlspecialchars($novedad['categoriaHabilitada'] ?? 'General'); ?>
+                            </span>
+                          </div>
+                          
+                          <p class="small text-muted mb-2">
+                            <?php 
+                            $descripcion = $novedad['descripcion'] ?? '';
+                            // Mostrar solo un extracto de la descripción
+                            if (strlen($descripcion) > 120) {
+                                $descripcion = substr($descripcion, 0, 120) . '...';
+                            }
+                            echo htmlspecialchars($descripcion);
+                            ?>
+                          </p>
+                          
+                          <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                              <i class="bi bi-calendar me-1"></i>
+                              <?php 
+                              $desde = $novedad['desde'] ?? '';
+                              $hasta = $novedad['hasta'] ?? '';
+                              if ($desde && $hasta) {
+                                  echo date('d/m/Y', strtotime($desde)) . ' - ' . date('d/m/Y', strtotime($hasta));
+                              } elseif ($desde) {
+                                  echo 'Desde ' . date('d/m/Y', strtotime($desde));
+                              } else {
+                                  echo 'Fecha no especificada';
+                              }
+                              ?>
+                            </small>
+                            <?php if (strlen($novedad['descripcion'] ?? '') > 120): ?>
+                              <a href="./Novedades.php" class="btn btn-sm btn-outline-primary">Leer más</a>
+                            <?php endif; ?>
+                          </div>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
@@ -281,7 +408,7 @@ $totalPromos          = count($promociones);
     </div>
   </div>
 
-
+  <!-- El resto de tu código (modales, toasts, etc.) permanece igual -->
   <div class="modal fade" id="detallePromoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -308,7 +435,6 @@ $totalPromos          = count($promociones);
     </div>
   </div>
 
-
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="toastMsg" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
@@ -320,7 +446,7 @@ $totalPromos          = count($promociones);
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
- 
+  // Tu código JavaScript existente permanece igual
   document.getElementById('btnMostrarMas')?.addEventListener('click', function(){
     document.querySelectorAll('.extra-promo').forEach(el => el.classList.remove('d-none'));
     this.remove();
@@ -335,7 +461,6 @@ $totalPromos          = count($promociones);
     }
   });
 
- 
   function diaLabel(d){
     const n = parseInt(d, 10);
     const w0 = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];      
@@ -345,7 +470,6 @@ $totalPromos          = count($promociones);
     if (n >= 1 && n <= 7) return w1[n];
     return '—';
   }
-
 
   const modal = document.getElementById('detallePromoModal');
   modal?.addEventListener('show.bs.modal', (ev) => {

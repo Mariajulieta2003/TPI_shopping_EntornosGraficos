@@ -1,7 +1,7 @@
 <?php
 // ../Model/ProcesarDashboardCliente.php
 // Depende de: ../Model/conexion.php que debe exponer getConnection(): PDO
-declare(strict_types=1);
+
 
 include_once __DIR__ . "/conexion.php";
 
@@ -27,27 +27,14 @@ function getPromocionesDisponiblesPorCategoria(string $categoria): int {
     $pdo = getConnection();
 
     $sql = "
-        SELECT COUNT(*) AS total_promociones
-        FROM promocion AS p
-        JOIN local AS l   ON l.IDlocal = p.localFk
-        LEFT JOIN ubicacion AS u ON u.IDubicacion = l.ubicacionFK
-        WHERE p.estado = '1'
+      SELECT COUNT(*) as total_promociones
+        FROM promocion p
+        WHERE p.estado = 1
           AND CURDATE() BETWEEN p.desde AND p.hasta
-          AND (
-                (p.dia BETWEEN 0 AND 6 AND p.dia = WEEKDAY(CURDATE())) OR
-                (p.dia BETWEEN 1 AND 7 AND p.dia = DAYOFWEEK(CURDATE()))
-              )
-          AND (
-            CASE
-              WHEN LOWER(p.categoriaHabilitada) IN ('inicial','bsico','básico') THEN 1
-              WHEN LOWER(p.categoriaHabilitada) IN ('medium','medio') THEN 2
-              WHEN LOWER(p.categoriaHabilitada) IN ('premium','avanzado','rockstar') THEN 3
-              ELSE 1
-            END
-          ) <= :rankUsuario
+          AND p.categoriaHabilitada = :rankUsuario
     ";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute(['rankUsuario' => categoria_rank($categoria)]);
+    $stmt->execute(['rankUsuario' => $categoria]);
     return (int)$stmt->fetchColumn();
 }
 
@@ -134,13 +121,86 @@ function getPromocionesPorCategoria(string $categoria, int $idUsuario): array {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-/**
- * Inserta la solicitud del usuario sobre una promoción.
- * Devuelve array con ['ok'=>bool, 'msg'=>string].
- */
+
+
+
+function getNovedadesRecientesPorCategoria($categoria_usuario, $limite = 8) {
+   
+    $pdo = getConnection();
+    
+    // Mapear categorías para comparación (igual que en las promociones)
+    $niveles_categoria = [
+        'Inicial' => 1,
+        'Medium' => 2,
+        'Premium' => 3,
+    ];
+    
+    $nivel_usuario = $niveles_categoria[$categoria_usuario] ?? 1;
+    
+    // Usar bindValue para el límite
+    $query = "
+        SELECT 
+            n.IDnovedad,
+            n.cabecera,
+            n.descripcion,
+            n.desde,
+            n.hasta,
+            n.usuarioHabilitado as categoriaHabilitada
+        FROM novedad n
+        WHERE CURDATE() BETWEEN n.desde AND n.hasta
+          AND (CASE n.usuarioHabilitado
+               WHEN 'Inicial' THEN 1
+               WHEN 'Medium' THEN 2
+               WHEN 'Premium' THEN 3
+               ELSE 1
+               END) <= ?
+        ORDER BY n.desde DESC
+        LIMIT ?
+    ";
+    
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(1, $nivel_usuario, PDO::PARAM_INT);
+    $stmt->bindValue(2, $limite, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
+
+
+
+function getHistorialUsoCliente($idUsuario, $limite = 8) {
+   
+    $pdo = getConnection();
+    
+    // Convertir el límite a entero para evitar inyección SQL
+    $limite = (int)$limite;
+    
+    $query = "
+        SELECT 
+            up.fechaUso,
+            up.estado,
+            p.descripcion as descripcion_promo,
+            l.nombre as nombre_local,
+            l.rubro as rubro_local,
+            p.categoriaHabilitada,
+            u.nombre as ubicacion_nombre
+        FROM usopromocion up
+        INNER JOIN promocion p ON up.promoFK = p.IDpromocion
+        INNER JOIN local l ON p.localFk = l.IDlocal
+        LEFT JOIN ubicacion u ON l.ubicacionFK = u.IDubicacion
+        WHERE up.usuarioFk = ?
+        ORDER BY up.fechaUso DESC
+        LIMIT " . $limite . "
+    ";
+    
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$idUsuario]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 function solicitarPromocion(int $idUsuario, int $idPromocion): array {
     $pdo = getConnection();
-    // Primero validamos que la promo exista y esté vigente
     $sqlPromo = "
         SELECT p.IDpromocion
         FROM promocion p
@@ -189,3 +249,5 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
     echo json_encode(['ok'=>false,'msg'=>'Acción no reconocida']); exit;
 }
+
+

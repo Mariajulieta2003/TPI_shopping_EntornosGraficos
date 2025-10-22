@@ -7,15 +7,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="./layouts/css/index.css">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <title>Document</title>
+    <title>Shopping</title>
 </head>
 
 <body>
-
+<style>
+  .hero{
+  background: linear-gradient(180deg, #4A3BC7 0%, #2A2668 100%);
+  padding: 64px 0;
+}
+.hero .hero-search .form-control{ border-top-left-radius: 999px; border-bottom-left-radius:999px; }
+.hero .hero-search .btn{ border-top-right-radius: 999px; border-bottom-right-radius:999px; }
+  </style>
 <?php  include 'C:\xampp\htdocs\TPIShopping\layouts\Navbar.php'; ?>
-
+</style>
   <section class="hero text-white">
     <div class="container py-5">
       <h1 class="display-5 fw-bold mb-4">Descubrí las mejores<br>tiendas y ofertas</h1>
@@ -29,7 +37,6 @@
 
  <main class="container my-5">
 
-  <!-- Promociones -->
   <h2 class="h4 mb-3">Promociones destacadas</h2>
   <div class="row g-3 ">
     <div class="col-12 col-sm-6 col-lg-3">
@@ -81,7 +88,6 @@
     </div>
   </div>
 
-  <!-- Categorías -->
   <h2 class="h4 my-4">Categorias</h2>
   <div class="row g-3 categorias">
     <div class="col-6 col-md-3">
@@ -159,10 +165,8 @@
     </div>
 
  <section id="cta-locatarios" class="py-5 text-center text-white position-relative" style="background-image: url('ruta/a/tu/imagen.jpg'); background-size: cover; background-position: center; transition: background-size 0.3s ease;">
-  <!-- Filtro oscuro (capa sobre la imagen) -->
   <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark" style="opacity: 0.05;"></div>
 
-  <!-- Contenido de la sección -->
   <div class="container position-relative z-index-1">
     <div class="row justify-content-center">
       <div class="col-lg-8">

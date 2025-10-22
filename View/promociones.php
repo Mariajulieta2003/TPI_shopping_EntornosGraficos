@@ -1,7 +1,12 @@
 <?php
 
 include("../Model/ListarPromociones.php");
-$promos = listarPromocionesVigentes(50);
+session_start();
+if (isset($_SESSION['Categoria'])) {
+    $promos = listarPromocionesVigentesCategoria($_SESSION['Categoria'], 50);
+} else {
+    $promos = listarPromocionesVigentes(50);
+}
 
 function diaALabel($n) {
   static $map = [1=>'Lunes',2=>'Martes',3=>'Miércoles',4=>'Jueves',5=>'Viernes',6=>'Sábado',7=>'Domingo'];
@@ -151,7 +156,9 @@ function formatearDias($valor) {
     </div>
   </div>
 
-
+<?php if (isset($_SESSION['IDusuario'])): ?>
+<script src="../layouts/JS/OcultarBoton.js" ></script>
+<?php endif; ?>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
 
