@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <i class="bi bi-plus-circle me-2"></i>Crear Promoción
                             </a>
                         </li>
-            <li class="nav-item"><a class="nav-link" href="./HistorialUsos.php">Historial</a></li>
+            <li class="nav-item"><a class="nav-link" href="./HistorialUsos.php"><i class="bi bi-list-ul me-2"></i>Historial</a></li>
             <li class="nav-item"><a class="nav-link" href="mailto:admin@shoppinggenerico.com?subject=Consulta%20desde%20el%20dashboard&body=Hola%20administrador,%0A%0A%20Tengo%20una%20consulta%20sobre...">Contactar Administrador</a></li>
           </ul>
         </div>

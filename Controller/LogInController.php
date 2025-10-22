@@ -33,7 +33,7 @@ try {
 
             switch($user['rol_id']) {
                 case 0:
-                    $Ruta = 'DashboardAdmin.php';
+                    $Ruta = 'DashboardAdministrador.php';
                     break;
                 case 1:
                     $Ruta = 'DashBoardCliente.php';
