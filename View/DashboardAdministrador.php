@@ -605,13 +605,18 @@ $reporteUsos = getReporteUsos($filtrosReporte);
                         </div>
                     </div>
 
+                    <!-- Locales Recientes & Gestión (CRUD) -->
                     <div class="row">
-                        <!-- Locales Recientes -->
                         <div class="col-12 col-lg-6 mb-4">
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">Locales Registrados</h5>
-                                    <a href="./GestionLocales.php" class="btn btn-sm btn-primary">Ver Todos</a>
+                                    <h5 class="mb-0">Gestión de Locales</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#modalLocal" onclick="openCreateLocal()">
+                                            <i class="bi bi-plus-circle"></i> Nuevo
+                                        </button>
+                                        <a href="./GestionLocales.php" class="btn btn-sm btn-primary">Ver Todos</a>
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <?php if (empty($locales)): ?>
@@ -621,30 +626,30 @@ $reporteUsos = getReporteUsos($filtrosReporte);
                                         </div>
                                     <?php else: ?>
                                         <div class="table-responsive">
-                                            <table class="table table-sm">
+                                            <table class="table table-sm align-middle">
                                                 <thead>
                                                     <tr>
                                                         <th>Nombre</th>
                                                         <th>Dueño</th>
                                                         <th>Ubicación</th>
-                                                        <th>Acciones</th>
+                                                        <th class="text-end">Acciones</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <?php foreach (array_slice($locales, 0, 5) as $local): ?>
-                                                        <tr>
+                                                    <?php foreach (array_slice($locales, 0, 8) as $local): ?>
+                                                        <tr id="local-row-<?php echo $local['IDlocal']; ?>">
                                                             <td>
                                                                 <div class="fw-medium"><?php echo htmlspecialchars($local['nombre']); ?></div>
                                                                 <small class="text-muted"><?php echo htmlspecialchars($local['rubro']); ?></small>
                                                             </td>
                                                             <td><?php echo htmlspecialchars($local['dueño'] ?? 'N/A'); ?></td>
                                                             <td><?php echo htmlspecialchars($local['ubicacion_nombre'] ?? 'N/A'); ?></td>
-                                                            <td>
+                                                            <td class="text-end">
                                                                 <div class="btn-group btn-group-sm">
-                                                                    <button class="btn btn-outline-primary action-btn" title="Editar">
+                                                                    <button class="btn btn-outline-primary action-btn" title="Editar" onclick="openEditLocal(<?php echo $local['IDlocal']; ?>)">
                                                                         <i class="bi bi-pencil"></i>
                                                                     </button>
-                                                                    <button class="btn btn-outline-danger action-btn" title="Eliminar">
+                                                                    <button class="btn btn-outline-danger action-btn" title="Eliminar" onclick="confirmDeleteLocal(<?php echo $local['IDlocal']; ?>)">
                                                                         <i class="bi bi-trash"></i>
                                                                     </button>
                                                                 </div>
@@ -659,11 +664,11 @@ $reporteUsos = getReporteUsos($filtrosReporte);
                             </div>
                         </div>
 
-                        <!-- Solicitudes Pendientes -->
+                        <!-- Solicitudes Pendientes (Validar cuentas / Solicitudes de dueños) -->
                         <div class="col-12 col-lg-6 mb-4">
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">Solicitudes Pendientes</h5>
+                                    <h5 class="mb-0">Solicitudes y Validaciones</h5>
                                     <span class="badge bg-warning"><?php echo count($solicitudesPendientes); ?></span>
                                 </div>
                                 <div class="card-body">
@@ -673,24 +678,93 @@ $reporteUsos = getReporteUsos($filtrosReporte);
                                             <p class="text-muted mt-2 mb-0">No hay solicitudes pendientes</p>
                                         </div>
                                     <?php else: ?>
-                                        <div class="list-group list-group-flush">
-                                            <?php foreach (array_slice($solicitudesPendientes, 0, 5) as $solicitud): ?>
-                                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <h6 class="mb-1"><?php echo htmlspecialchars($solicitud['nombre']); ?></h6>
-                                                        <p class="mb-1 small text-muted"><?php echo htmlspecialchars($solicitud['email']); ?></p>
-                                                        <small class="text-muted">Local: <?php echo htmlspecialchars($solicitud['nombreLocal']); ?></small>
+                                        <div class="list-group">
+                                            <?php foreach (array_slice($solicitudesPendientes, 0, 8) as $sol): ?>
+                                                <div class="list-group-item d-flex justify-content-between align-items-start" id="solicitud-<?php echo $sol['IDsolicitud']; ?>">
+                                                    <div class="me-3">
+                                                        <strong><?php echo htmlspecialchars($sol['nombre'] ?? $sol['nombreLocal'] ?? 'Solicitud'); ?></strong>
+                                                        <div class="small text-muted"><?php echo htmlspecialchars($sol['email'] ?? ''); ?></div>
+                                                        <div class="small text-muted">Local: <?php echo htmlspecialchars($sol['nombreLocal'] ?? 'N/A'); ?></div>
                                                     </div>
-                                                    <div class="btn-group">
-                                                        <button class="btn btn-sm btn-success" title="Aprobar">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-success" title="Aprobar" onclick="decideSolicitud(<?php echo $sol['IDsolicitud']; ?>, 1)">
                                                             <i class="bi bi-check-lg"></i>
                                                         </button>
-                                                        <button class="btn btn-sm btn-danger" title="Rechazar">
+                                                        <button class="btn btn-danger" title="Rechazar" onclick="decideSolicitud(<?php echo $sol['IDsolicitud']; ?>, 0)">
                                                             <i class="bi bi-x-lg"></i>
                                                         </button>
                                                     </div>
                                                 </div>
                                             <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <hr>
+
+                                    <!-- Promociones Pendientes (Aprobar/Denegar) -->
+                                    <h6 class="mt-3">Promociones Pendientes</h6>
+                                    <?php if (empty($promocionesPendientes)): ?>
+                                        <p class="text-muted small mb-0">No hay promociones pendientes de aprobación</p>
+                                    <?php else: ?>
+                                        <div class="list-group mt-2">
+                                            <?php foreach (array_slice($promocionesPendientes, 0, 6) as $promo): ?>
+                                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong><?php echo htmlspecialchars($promo['descripcion']); ?></strong>
+                                                        <div class="small text-muted"><?php echo htmlspecialchars($promo['local_nombre']); ?> — <?php echo htmlspecialchars($promo['rubro']); ?></div>
+                                                        <div class="small text-muted">Desde: <?php echo htmlspecialchars($promo['desde']); ?> Hasta: <?php echo htmlspecialchars($promo['hasta']); ?></div>
+                                                    </div>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-success" onclick="decidePromocion(<?php echo $promo['IDpromocion']; ?>, 1)"><i class="bi bi-check-lg"></i></button>
+                                                        <button class="btn btn-danger" onclick="decidePromocion(<?php echo $promo['IDpromocion']; ?>, 0)"><i class="bi bi-x-lg"></i></button>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gestión de Novedades (CRUD rápido) -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Novedades</h5>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovedad" onclick="openCreateNovedad()">
+                                        <i class="bi bi-plus-circle"></i> Nueva Novedad
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <?php if (empty($novedadesActivas)): ?>
+                                        <p class="text-muted">No hay novedades activas</p>
+                                    <?php else: ?>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Título</th>
+                                                        <th>Vigencia</th>
+                                                        <th class="text-end">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($novedadesActivas as $nov): ?>
+                                                        <tr id="novedad-<?php echo $nov['IDnovedad']; ?>">
+                                                            <td><?php echo htmlspecialchars($nov['titulo']); ?></td>
+                                                            <td><?php echo htmlspecialchars($nov['desde']) . ' → ' . htmlspecialchars($nov['hasta']); ?></td>
+                                                            <td class="text-end">
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <button class="btn btn-outline-primary" onclick="openEditNovedad(<?php echo $nov['IDnovedad']; ?>)"><i class="bi bi-pencil"></i></button>
+                                                                    <button class="btn btn-outline-danger" onclick="confirmDeleteNovedad(<?php echo $nov['IDnovedad']; ?>)"><i class="bi bi-trash"></i></button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -816,31 +890,228 @@ $reporteUsos = getReporteUsos($filtrosReporte);
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Modales: Local -->
+    <div class="modal fade" id="modalLocal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="formLocal" class="modal-content" onsubmit="submitLocal(event)">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLocalTitle">Nuevo Local</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="create_local" id="local_action">
+                    <input type="hidden" name="IDlocal" id="IDlocal">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input class="form-control" name="nombre" id="local_nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rubro</label>
+                        <input class="form-control" name="rubro" id="local_rubro">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dueño (ID)</label>
+                        <input class="form-control" name="usuarioFK" id="local_dueño" type="number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ubicación (ID)</label>
+                        <input class="form-control" name="ubicacionFK" id="local_ubicacion" type="number">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modales: Novedad -->
+    <div class="modal fade" id="modalNovedad" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="formNovedad" class="modal-content" onsubmit="submitNovedad(event)">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNovedadTitle">Nueva Novedad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="create_novedad" id="novedad_action">
+                    <input type="hidden" name="IDnovedad" id="IDnovedad">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input class="form-control" name="titulo" id="novedad_titulo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" name="descripcion" id="novedad_descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Desde</label>
+                            <input type="date" class="form-control" name="desde" id="novedad_desde">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Hasta</label>
+                            <input type="date" class="form-control" name="hasta" id="novedad_hasta">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm delete modal genérico -->
+    <div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <p id="confirmMessage">¿Confirmar eliminación?</p>
+                    <div class="text-end">
+                        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button class="btn btn-danger btn-sm" id="confirmDeleteBtn">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function limpiarFiltros() {
-            document.getElementById('fecha_desde').value = '';
-            document.getElementById('fecha_hasta').value = '';
-            document.getElementById('local_id').value = '';
-            document.getElementById('filtrosForm').submit();
+        // Helper ajax POST a este mismo archivo
+        async function postAction(data) {
+            const resp = await fetch(window.location.href, {
+                method: 'POST',
+                body: data
+            });
+            return resp.json();
         }
 
-        // Validación de fechas
-        document.getElementById('fecha_desde').addEventListener('change', function() {
-            const fechaHasta = document.getElementById('fecha_hasta');
-            if (this.value && fechaHasta.value && this.value > fechaHasta.value) {
-                alert('La fecha "desde" no puede ser posterior a la fecha "hasta"');
-                this.value = '';
-            }
-        });
+        // --- LOCALES ---
+        function openCreateLocal() {
+            document.getElementById('modalLocalTitle').textContent = 'Nuevo Local';
+            document.getElementById('local_action').value = 'create_local';
+            document.getElementById('IDlocal').value = '';
+            document.getElementById('local_nombre').value = '';
+            document.getElementById('local_rubro').value = '';
+            document.getElementById('local_dueño').value = '';
+            document.getElementById('local_ubicacion').value = '';
+        }
 
-        document.getElementById('fecha_hasta').addEventListener('change', function() {
-            const fechaDesde = document.getElementById('fecha_desde');
-            if (this.value && fechaDesde.value && this.value < fechaDesde.value) {
-                alert('La fecha "hasta" no puede ser anterior a la fecha "desde"');
-                this.value = '';
+        function openEditLocal(id) {
+            // cargar datos desde DOM (puedes reemplazar por una petición si hace falta)
+            const row = document.getElementById('local-row-' + id);
+            const nombre = row.querySelector('.fw-medium').textContent.trim();
+            const rubro = row.querySelector('small') ? row.querySelector('small').textContent.trim() : '';
+            document.getElementById('modalLocalTitle').textContent = 'Editar Local';
+            document.getElementById('local_action').value = 'update_local';
+            document.getElementById('IDlocal').value = id;
+            document.getElementById('local_nombre').value = nombre;
+            document.getElementById('local_rubro').value = rubro;
+            // dueño/ubicacion no visibles en tabla: dejar manual o mejorar con fetch
+            var modal = new bootstrap.Modal(document.getElementById('modalLocal'));
+            modal.show();
+        }
+
+        async function submitLocal(e) {
+            e.preventDefault();
+            const form = document.getElementById('formLocal');
+            const data = new FormData(form);
+            const json = await postAction(data);
+            if (json.success) {
+                location.reload();
+            } else {
+                alert(json.error || 'Error al guardar local');
             }
-        });
+        }
+
+        function confirmDeleteLocal(id) {
+            const btn = document.getElementById('confirmDeleteBtn');
+            document.getElementById('confirmMessage').textContent = '¿Eliminar local #' + id + '?';
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+            btn.onclick = async () => {
+                const fd = new FormData();
+                fd.append('action','delete_local');
+                fd.append('IDlocal', id);
+                const res = await postAction(fd);
+                if (res.success) location.reload();
+                else alert(res.error || 'Error al eliminar');
+            };
+            modal.show();
+        }
+
+        // --- SOLICITUD / VALIDACIONES / PROMOCIONES ---
+        async function decideSolicitud(id, approve) {
+            if (!confirm(approve ? 'Aprobar solicitud?' : 'Rechazar solicitud?')) return;
+            const fd = new FormData();
+            fd.append('action','decide_solicitud');
+            fd.append('IDsolicitud', id);
+            fd.append('approve', approve ? '1' : '0');
+            const res = await postAction(fd);
+            if (res.success) location.reload();
+            else alert(res.error || 'Error');
+        }
+
+        async function decidePromocion(id, approve) {
+            if (!confirm(approve ? 'Aprobar promoción?' : 'Rechazar promoción?')) return;
+            // si el endpoint para promociones es el mismo 'decide_solicitud' cambia a la acción correcta.
+            const fd = new FormData();
+            fd.append('action','decide_solicitud'); // si quieres otra acción, ajusta en PHP
+            fd.append('IDsolicitud', id);
+            fd.append('approve', approve ? '1' : '0');
+            const res = await postAction(fd);
+            if (res.success) location.reload();
+            else alert(res.error || 'Error');
+        }
+
+        // --- NOVEDADES ---
+        function openCreateNovedad() {
+            document.getElementById('modalNovedadTitle').textContent = 'Nueva Novedad';
+            document.getElementById('novedad_action').value = 'create_novedad';
+            document.getElementById('IDnovedad').value = '';
+            document.getElementById('novedad_titulo').value = '';
+            document.getElementById('novedad_descripcion').value = '';
+            document.getElementById('novedad_desde').value = '';
+            document.getElementById('novedad_hasta').value = '';
+        }
+
+        function openEditNovedad(id) {
+            // Para simplicidad reutilizo valores existentes en DOM; si no están, pedir por fetch
+            const row = document.getElementById('novedad-' + id);
+            const titulo = row.querySelector('td:first-child') ? row.querySelector('td:first-child').textContent.trim() : '';
+            document.getElementById('modalNovedadTitle').textContent = 'Editar Novedad';
+            document.getElementById('novedad_action').value = 'update_novedad';
+            document.getElementById('IDnovedad').value = id;
+            document.getElementById('novedad_titulo').value = titulo;
+            var modal = new bootstrap.Modal(document.getElementById('modalNovedad'));
+            modal.show();
+        }
+
+        async function submitNovedad(e) {
+            e.preventDefault();
+            const form = document.getElementById('formNovedad');
+            const data = new FormData(form);
+            const res = await postAction(data);
+            if (res.success) location.reload();
+            else alert(res.error || 'Error al guardar novedad');
+        }
+
+        function confirmDeleteNovedad(id) {
+            const btn = document.getElementById('confirmDeleteBtn');
+            document.getElementById('confirmMessage').textContent = '¿Eliminar novedad #' + id + '?';
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+            btn.onclick = async () => {
+                const fd = new FormData();
+                fd.append('action','delete_novedad');
+                fd.append('IDnovedad', id);
+                const res = await postAction(fd);
+                if (res.success) location.reload();
+                else alert(res.error || 'Error al eliminar');
+            };
+            modal.show();
+        }
     </script>
 </body>
 </html>
