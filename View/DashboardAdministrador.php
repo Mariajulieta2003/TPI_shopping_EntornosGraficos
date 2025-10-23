@@ -3,7 +3,6 @@ session_start();
 require_once '../Model/conexion.php';
 
 
-
 // Funciones para el dashboard del administrador
 
 // Manejo de acciones administrativas vía POST (AJAX)
