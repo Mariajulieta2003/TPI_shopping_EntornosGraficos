@@ -6,6 +6,120 @@ require_once '../Model/conexion.php';
 
 // Funciones para el dashboard del administrador
 
+// Manejo de acciones administrativas vía POST (AJAX)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
+    // Verificar sesión y rol
+    session_start();
+    if (empty($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+        header('Content-Type: application/json; charset=utf-8', true, 403);
+        echo json_encode(['error' => 'Permiso denegado']);
+        exit;
+    }
+
+    require_once __DIR__ . '/../Model/conexion.php';
+    $pdo = getConnection();
+    $action = $_POST['action'];
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        switch ($action) {
+            // LOCALES
+            case 'create_local':
+                $nombre = trim($_POST['nombre'] ?? '');
+                $usuarioFK = !empty($_POST['usuarioFK']) ? intval($_POST['usuarioFK']) : null;
+                $ubicacionFK = !empty($_POST['ubicacionFK']) ? intval($_POST['ubicacionFK']) : null;
+                $rubro = trim($_POST['rubro'] ?? '');
+                if ($nombre === '') throw new Exception('Nombre de local requerido');
+                $stmt = $pdo->prepare("INSERT INTO local (nombre, usuarioFK, ubicacionFK, rubro) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$nombre, $usuarioFK, $ubicacionFK, $rubro]);
+                echo json_encode(['success' => true, 'IDlocal' => $pdo->lastInsertId()]);
+                break;
+
+            case 'update_local':
+                $id = intval($_POST['IDlocal'] ?? 0);
+                if ($id <= 0) throw new Exception('IDlocal inválido');
+                $nombre = trim($_POST['nombre'] ?? '');
+                $usuarioFK = !empty($_POST['usuarioFK']) ? intval($_POST['usuarioFK']) : null;
+                $ubicacionFK = !empty($_POST['ubicacionFK']) ? intval($_POST['ubicacionFK']) : null;
+                $rubro = trim($_POST['rubro'] ?? '');
+                $stmt = $pdo->prepare("UPDATE local SET nombre = ?, usuarioFK = ?, ubicacionFK = ?, rubro = ? WHERE IDlocal = ?");
+                $stmt->execute([$nombre, $usuarioFK, $ubicacionFK, $rubro, $id]);
+                echo json_encode(['success' => true]);
+                break;
+
+            case 'delete_local':
+                $id = intval($_POST['IDlocal'] ?? 0);
+                if ($id <= 0) throw new Exception('IDlocal inválido');
+                $stmt = $pdo->prepare("DELETE FROM local WHERE IDlocal = ?");
+                $stmt->execute([$id]);
+                echo json_encode(['success' => true]);
+                break;
+
+            // VALIDAR CUENTAS (DUEÑOS)
+            case 'validate_user':
+                $userId = intval($_POST['IDusuario'] ?? 0);
+                $approve = isset($_POST['approve']) && $_POST['approve'] == '1' ? 1 : 0;
+                if ($userId <= 0) throw new Exception('IDusuario inválido');
+                $stmt = $pdo->prepare("UPDATE usuario SET estado = ? WHERE IDusuario = ?");
+                $stmt->execute([$approve, $userId]);
+                echo json_encode(['success' => true]);
+                break;
+
+            // SOLICITUDES DE DESCUENTO
+            case 'decide_solicitud':
+                $id = intval($_POST['IDsolicitud'] ?? 0);
+                $approve = isset($_POST['approve']) && $_POST['approve'] == '1' ? 1 : 0;
+                if ($id <= 0) throw new Exception('IDsolicitud inválido');
+                // Asumir columna 'estado' en solicitud: 1=aprobada,2=rechazada,0=pendiente
+                $estado = $approve ? 1 : 2;
+                $stmt = $pdo->prepare("UPDATE solicitud SET estado = ? WHERE IDsolicitud = ?");
+                $stmt->execute([$estado, $id]);
+                echo json_encode(['success' => true]);
+                break;
+
+            // NOVEDADES
+            case 'create_novedad':
+                $titulo = trim($_POST['titulo'] ?? '');
+                $descripcion = trim($_POST['descripcion'] ?? '');
+                $desde = $_POST['desde'] ?? null;
+                $hasta = $_POST['hasta'] ?? null;
+                if ($titulo === '') throw new Exception('Título requerido');
+                $stmt = $pdo->prepare("INSERT INTO novedad (titulo, descripcion, desde, hasta) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$titulo, $descripcion, $desde, $hasta]);
+                echo json_encode(['success' => true, 'IDnovedad' => $pdo->lastInsertId()]);
+                break;
+
+            case 'update_novedad':
+                $id = intval($_POST['IDnovedad'] ?? 0);
+                if ($id <= 0) throw new Exception('IDnovedad inválido');
+                $titulo = trim($_POST['titulo'] ?? '');
+                $descripcion = trim($_POST['descripcion'] ?? '');
+                $desde = $_POST['desde'] ?? null;
+                $hasta = $_POST['hasta'] ?? null;
+                $stmt = $pdo->prepare("UPDATE novedad SET titulo = ?, descripcion = ?, desde = ?, hasta = ? WHERE IDnovedad = ?");
+                $stmt->execute([$titulo, $descripcion, $desde, $hasta, $id]);
+                echo json_encode(['success' => true]);
+                break;
+
+            case 'delete_novedad':
+                $id = intval($_POST['IDnovedad'] ?? 0);
+                if ($id <= 0) throw new Exception('IDnovedad inválido');
+                $stmt = $pdo->prepare("DELETE FROM novedad WHERE IDnovedad = ?");
+                $stmt->execute([$id]);
+                echo json_encode(['success' => true]);
+                break;
+
+            default:
+                echo json_encode(['error' => 'Acción no válida']);
+        }
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // Obtener estadísticas generales
 function getEstadisticasGenerales() {
     $pdo = getConnection();
