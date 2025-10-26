@@ -1,111 +1,8 @@
 <?php
 session_start();
-require_once '../Model/conexion.php';
+require_once '../Model/GestionNovedades.php';
 
-// Funciones para la gestión de novedades
-function getNovedades() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            n.*,
-            CASE 
-                WHEN n.usuarioHabilitado = 'Inicial' THEN 'Todos los clientes'
-                WHEN n.usuarioHabilitado = 'Medium' THEN 'Medium y Premium'
-                WHEN n.usuarioHabilitado = 'Premium' THEN 'Solo Premium'
-                ELSE n.usuarioHabilitado
-            END as audiencia_descripcion
-        FROM novedad n
-        ORDER BY n.desde DESC, n.IDnovedad DESC
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 
-function getNovedadById($id) {
-    $pdo = getConnection();
-    $query = "SELECT * FROM novedad WHERE IDnovedad = ?";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([$id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-function crearNovedad($datos) {
-    $pdo = getConnection();
-    $query = "
-        INSERT INTO novedad 
-        (desde, hasta, usuarioHabilitado, descripcion, cabecera, cuerpo, imagen) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ";
-    $stmt = $pdo->prepare($query);
-    return $stmt->execute([
-        $datos['desde'],
-        $datos['hasta'],
-        $datos['usuarioHabilitado'],
-        $datos['descripcion'],
-        $datos['cabecera'],
-        $datos['cuerpo'],
-        null // Por ahora no manejamos imágenes
-    ]);
-}
-
-function actualizarNovedad($id, $datos) {
-    $pdo = getConnection();
-    $query = "
-        UPDATE novedad 
-        SET desde = ?, hasta = ?, usuarioHabilitado = ?, descripcion = ?, cabecera = ?, cuerpo = ?
-        WHERE IDnovedad = ?
-    ";
-    $stmt = $pdo->prepare($query);
-    return $stmt->execute([
-        $datos['desde'],
-        $datos['hasta'],
-        $datos['usuarioHabilitado'],
-        $datos['descripcion'],
-        $datos['cabecera'],
-        $datos['cuerpo'],
-        $id
-    ]);
-}
-
-function eliminarNovedad($id) {
-    $pdo = getConnection();
-    $query = "DELETE FROM novedad WHERE IDnovedad = ?";
-    $stmt = $pdo->prepare($query);
-    return $stmt->execute([$id]);
-}
-
-function getEstadisticasNovedades() {
-    $pdo = getConnection();
-    
-    $stats = [];
-    
-    // Total de novedades
-    $query = "SELECT COUNT(*) as total FROM novedad";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['total'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Novedades activas
-    $query = "SELECT COUNT(*) as total FROM novedad WHERE hasta >= CURDATE()";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['activas'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Novedades expiradas
-    $query = "SELECT COUNT(*) as total FROM novedad WHERE hasta < CURDATE()";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['expiradas'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Distribución por categoría
-    $query = "SELECT usuarioHabilitado, COUNT(*) as cantidad FROM novedad GROUP BY usuarioHabilitado";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['categorias'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    return $stats;
-}
 
 // Procesar acciones
 $mensaje = '';
@@ -319,7 +216,6 @@ $estadisticas = getEstadisticasNovedades();
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand text-white" href="#">
@@ -349,7 +245,6 @@ $estadisticas = getEstadisticasNovedades();
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
             <nav class="col-12 col-md-3 col-lg-2 px-3 sidebar">
                 <div class="pt-3 pb-2">
                     <h6 class="text-muted">Panel de Administración</h6>
@@ -388,10 +283,8 @@ $estadisticas = getEstadisticasNovedades();
                 </div>
             </nav>
 
-            <!-- Main Content -->
             <main class="col-12 col-md-9 col-lg-10 py-4">
                 <div class="container-fluid">
-                    <!-- Header -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h1 class="h3 mb-1">
@@ -402,7 +295,6 @@ $estadisticas = getEstadisticasNovedades();
                         </div>
                     </div>
 
-                    <!-- Alertas -->
                     <?php if ($mensaje): ?>
                         <div class="alert alert-<?php echo $tipoMensaje; ?> alert-dismissible fade show" role="alert">
                             <?php echo htmlspecialchars($mensaje); ?>
@@ -410,7 +302,6 @@ $estadisticas = getEstadisticasNovedades();
                         </div>
                     <?php endif; ?>
 
-                    <!-- Estadísticas -->
                     <div class="row g-3 mb-4">
                         <div class="col-6 col-md-3">
                             <div class="stats-card p-3">
@@ -459,7 +350,6 @@ $estadisticas = getEstadisticasNovedades();
                     </div>
 
                     <div class="row">
-                        <!-- Formulario de Novedad -->
                         <div class="col-12 col-lg-5">
                             <div class="form-section">
                                 <h4 class="mb-4">
@@ -545,7 +435,6 @@ $estadisticas = getEstadisticasNovedades();
                             </div>
                         </div>
 
-                        <!-- Lista de Novedades -->
                         <div class="col-12 col-lg-7">
                             <div class="form-section">
                                 <h4 class="mb-4">
@@ -646,7 +535,6 @@ $estadisticas = getEstadisticasNovedades();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Cerrar alertas automáticamente después de 5 segundos
         setTimeout(() => {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {

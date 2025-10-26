@@ -392,7 +392,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Contador de caracteres para la descripción
         const descripcion = document.getElementById('descripcion');
         const contador = document.getElementById('contadorCaracteres');
         
@@ -400,10 +399,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             contador.textContent = this.value.length;
         });
 
-        // Inicializar contador
         contador.textContent = descripcion.value.length;
 
-        // Validación de fechas
         const desdeInput = document.getElementById('desde');
         const hastaInput = document.getElementById('hasta');
 
@@ -419,7 +416,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
-        // Validación del formulario
         document.getElementById('promocionForm').addEventListener('submit', function(e) {
             const descripcion = document.getElementById('descripcion').value.trim();
             const desde = document.getElementById('desde').value;

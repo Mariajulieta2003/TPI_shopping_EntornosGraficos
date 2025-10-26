@@ -1,106 +1,7 @@
 <?php
 session_start();
-require_once '../Model/conexion.php';
+require_once '../Model/GestionLocales.php';
 
-
-
-// Funciones para la gestión de locales
-function getLocalesCompletos() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            l.*, 
-            u.nombreUsuario as dueño_nombre,
-            u.email as dueño_email,
-            ub.nombre as ubicacion_nombre,
-            ub.Descripcion as ubicacion_descripcion,
-            COUNT(p.IDpromocion) as total_promociones
-        FROM local l 
-        LEFT JOIN usuario u ON l.usuarioFK = u.IDusuario 
-        LEFT JOIN ubicacion ub ON l.ubicacionFK = ub.IDubicacion
-        LEFT JOIN promocion p ON l.IDlocal = p.localFk AND p.estado = 1
-        GROUP BY l.IDlocal
-        ORDER BY l.nombre
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getUbicaciones() {
-    $pdo = getConnection();
-    $query = "SELECT * FROM ubicacion WHERE estado = 0 ORDER BY nombre";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getComerciantes() {
-    $pdo = getConnection();
-    $query = "SELECT IDusuario, nombreUsuario, email FROM usuario WHERE tipoFK = 2 AND estado = 1 ORDER BY nombreUsuario";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getLocalById($id) {
-    $pdo = getConnection();
-    $query = "SELECT * FROM local WHERE IDlocal = ?";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([$id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-function crearLocal($datos) {
-    $pdo = getConnection();
-    
-    // Generar código único para el local
-    $codigo = 'LOCAL_' . strtoupper(uniqid());
-    
-    $query = "INSERT INTO local (nombre, rubro, usuarioFK, ubicacionFK, codigo) VALUES (?, ?, ?, ?, ?)";
-    $stmt = $pdo->prepare($query);
-    return $stmt->execute([
-        $datos['nombre'],
-        $datos['rubro'],
-        $datos['usuarioFK'],
-        $datos['ubicacionFK'],
-        $codigo
-    ]);
-}
-
-function actualizarLocal($id, $datos) {
-    $pdo = getConnection();
-    $query = "UPDATE local SET nombre = ?, rubro = ?, usuarioFK = ?, ubicacionFK = ? WHERE IDlocal = ?";
-    $stmt = $pdo->prepare($query);
-    return $stmt->execute([
-        $datos['nombre'],
-        $datos['rubro'],
-        $datos['usuarioFK'],
-        $datos['ubicacionFK'],
-        $id
-    ]);
-}
-
-function eliminarLocal($id) {
-    $pdo = getConnection();
-    
-    // Verificar si hay promociones activas
-    $queryCheck = "SELECT COUNT(*) as total FROM promocion WHERE localFk = ? AND estado = 1";
-    $stmtCheck = $pdo->prepare($queryCheck);
-    $stmtCheck->execute([$id]);
-    $result = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-    
-    if ($result['total'] > 0) {
-        return ['success' => false, 'message' => 'No se puede eliminar el local porque tiene promociones activas.'];
-    }
-    
-    // Eliminar local
-    $query = "DELETE FROM local WHERE IDlocal = ?";
-    $stmt = $pdo->prepare($query);
-    $success = $stmt->execute([$id]);
-    
-    return ['success' => $success, 'message' => $success ? 'Local eliminado correctamente.' : 'Error al eliminar el local.'];
-}
 
 // Procesar acciones
 $mensaje = '';
@@ -166,18 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
     }
     
-    // Redirigir para evitar reenvío del formulario
     header('Location: GestionLocales.php?mensaje=' . urlencode($mensaje) . '&tipo=' . $tipoMensaje);
     exit;
 }
 
-// Manejar mensajes de redirección
 if (isset($_GET['mensaje'])) {
     $mensaje = $_GET['mensaje'];
     $tipoMensaje = $_GET['tipo'] ?? 'info';
 }
 
-// Si es GET y hay ID, cargar local para editar
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['editar'])) {
     $localEdit = getLocalById($_GET['editar']);
     if ($localEdit) {
@@ -198,7 +96,7 @@ $comerciantes = getComerciantes();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Locales - ShoppingGenerico</title>
+    <title>Gestión de Locales - ShoppingUTN</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -371,7 +269,6 @@ $comerciantes = getComerciantes();
             <!-- Main Content -->
             <main class="col-12 col-md-9 col-lg-10 py-4">
                 <div class="container-fluid">
-                    <!-- Header -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h1 class="h3 mb-1">
@@ -385,7 +282,6 @@ $comerciantes = getComerciantes();
                         </a>
                     </div>
 
-                    <!-- Alertas -->
                     <?php if ($mensaje): ?>
                         <div class="alert alert-<?php echo $tipoMensaje; ?> alert-dismissible fade show" role="alert">
                             <?php echo htmlspecialchars($mensaje); ?>
@@ -393,7 +289,6 @@ $comerciantes = getComerciantes();
                         </div>
                     <?php endif; ?>
 
-                    <!-- Estadísticas -->
                     <div class="row g-3 mb-4">
                         <div class="col-6 col-md-3">
                             <div class="stats-card p-3">
@@ -430,7 +325,6 @@ $comerciantes = getComerciantes();
                         </div>
                     </div>
 
-                    <!-- Lista de Locales -->
                     <div class="card">
                         <div class="card-header">
                             <h5 class="mb-0">Locales Registrados</h5>
@@ -511,7 +405,6 @@ $comerciantes = getComerciantes();
         </div>
     </div>
 
-    <!-- Modal para Crear/Editar Local -->
     <div class="modal fade" id="modalLocal" tabindex="-1" aria-labelledby="modalLocalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -603,7 +496,6 @@ $comerciantes = getComerciantes();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         <?php if ($mostrarModal || isset($_GET['crear'])): ?>
-            // Mostrar modal automáticamente si hay que editar o crear
             document.addEventListener('DOMContentLoaded', function() {
                 const modal = new bootstrap.Modal(document.getElementById('modalLocal'));
                 modal.show();
@@ -611,11 +503,9 @@ $comerciantes = getComerciantes();
         <?php endif; ?>
 
         function cerrarModal() {
-            // Redirigir a la página sin parámetros para cerrar el modal
             window.location.href = 'GestionLocales.php';
         }
 
-        // Cerrar alertas automáticamente después de 5 segundos
         setTimeout(() => {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {

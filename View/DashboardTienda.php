@@ -148,7 +148,6 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
       <main class="col-12 col-md-9 col-lg-10 py-4">
         <div class="container-fluid">
 
-          <!-- Estadísticas -->
           <div class="row g-3 mb-3">
             <div class="col-12 col-md-4">
               <div class="card shadow-sm">
@@ -203,7 +202,6 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
           </div>
 
           <div class="row mt-4">
-            <!-- Promociones Activas -->
             <div class="col-12 col-lg-6 mb-4">
               <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -266,7 +264,6 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
               </div>
             </div>
 
-            <!-- Solicitudes Pendientes -->
             <div class="col-12 col-lg-6 mb-4">
               <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -359,7 +356,6 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Eliminar promoción (desactivar)
     document.querySelectorAll('.btn-eliminar-promocion').forEach(button => {
       button.addEventListener('click', function() {
         const id = this.dataset.id;
@@ -367,7 +363,6 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
         document.getElementById('promocionNombre').textContent = desc;
         const modal = new bootstrap.Modal(document.getElementById('confirmarEliminarModal'));
         
-        // Limpiar evento anterior
         document.getElementById('confirmarEliminar').onclick = null;
         
         // Configurar nuevo evento
@@ -414,7 +409,6 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
       });
     });
 
-    // Aceptar solicitud
     document.querySelectorAll('.btn-aceptar').forEach(button => {
       button.addEventListener('click', function() {
         const usuarioFk = this.dataset.usuario;
@@ -443,7 +437,6 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
       });
     });
 
-    // Rechazar solicitud
     document.querySelectorAll('.btn-rechazar').forEach(button => {
       button.addEventListener('click', function() {
         const usuarioFk = this.dataset.usuario;

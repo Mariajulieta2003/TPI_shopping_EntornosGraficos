@@ -75,8 +75,7 @@ function formatearDias($valor) {
           $desde        = $p['desde'] ?? '';
           $hasta        = $p['hasta'] ?? '';
           $diasRaw      = $p['dia'] ?? '';
-          // helper que ya te dejé:
-          // function formatearDias($valor){ ... }
+   
           $diasLabel    = formatearDias($diasRaw);
           $localNombre  = $p['local_nombre'] ?? '';
           $localRubro   = $p['local_rubro']  ?? '';

@@ -23,7 +23,7 @@
     .small-muted { color: var(--muted); font-size: .9rem; }
     .badge-cat { background: rgba(var(--primary-rgb), 0.12); color: var(--primary); font-weight:600; }
 
-    /* Estilos para listas */
+    /* para listas */
     .promocion-item, .solicitud-item {
         border-left: 4px solid var(--primary);
         padding-left: 1rem;

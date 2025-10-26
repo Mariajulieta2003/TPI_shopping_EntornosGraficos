@@ -1,222 +1,6 @@
 <?php
 session_start();
-require_once '../Model/conexion.php';
-
-// Funciones para obtener datos de reportes
-function getEstadisticasGenerales() {
-    $pdo = getConnection();
-    
-    $stats = [];
-    
-    // Total de locales
-    $query = "SELECT COUNT(*) as total FROM local";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['total_locales'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Total de usuarios registrados
-    $query = "SELECT COUNT(*) as total FROM usuario WHERE estado = 1";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['total_usuarios'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Total de promociones activas
-    $query = "SELECT COUNT(*) as total FROM promocion WHERE estado = '1' AND hasta >= CURDATE()";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['promociones_activas'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Total de novedades activas
-    $query = "SELECT COUNT(*) as total FROM novedad WHERE hasta >= CURDATE()";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['novedades_activas'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    return $stats;
-}
-
-function getUsuariosPorCategoria() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            c.nombre as categoria,
-            COUNT(u.IDusuario) as cantidad
-        FROM usuario u
-        INNER JOIN categoria c ON u.categoriaFK = c.IDcategoria
-        WHERE u.estado = 1
-        GROUP BY c.nombre
-        ORDER BY cantidad DESC
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getUsuariosPorRol() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            r.nombre as rol,
-            COUNT(u.IDusuario) as cantidad
-        FROM usuario u
-        INNER JOIN rol r ON u.tipoFK = r.IDrol
-        WHERE u.estado = 1
-        GROUP BY r.nombre
-        ORDER BY cantidad DESC
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getLocalesPorRubro() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            rubro,
-            COUNT(IDlocal) as cantidad
-        FROM local
-        GROUP BY rubro
-        ORDER BY cantidad DESC
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getPromocionesPorEstado() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            CASE 
-                WHEN estado = '0' THEN 'Pendientes'
-                WHEN estado = '1' AND hasta >= CURDATE() THEN 'Activas'
-                WHEN estado = '1' AND hasta < CURDATE() THEN 'Expiradas'
-                WHEN estado = '2' THEN 'Rechazadas'
-                ELSE 'Otros'
-            END as estado,
-            COUNT(IDpromocion) as cantidad
-        FROM promocion
-        GROUP BY 
-            CASE 
-                WHEN estado = '0' THEN 'Pendientes'
-                WHEN estado = '1' AND hasta >= CURDATE() THEN 'Activas'
-                WHEN estado = '1' AND hasta < CURDATE() THEN 'Expiradas'
-                WHEN estado = '2' THEN 'Rechazadas'
-                ELSE 'Otros'
-            END
-        ORDER BY cantidad DESC
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getUsoPromociones() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            DATE_FORMAT(fechaUso, '%Y-%m') as mes,
-            COUNT(*) as cantidad
-        FROM usopromocion
-        WHERE fechaUso >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-        GROUP BY DATE_FORMAT(fechaUso, '%Y-%m')
-        ORDER BY mes
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getTopLocales() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            l.nombre as local_nombre,
-            l.rubro,
-            COUNT(up.promoFK) as usos
-        FROM local l
-        LEFT JOIN promocion p ON l.IDlocal = p.localFk
-        LEFT JOIN usopromocion up ON p.IDpromocion = up.promoFK
-        GROUP BY l.IDlocal, l.nombre, l.rubro
-        ORDER BY usos DESC
-        LIMIT 10
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getSolicitudesPorEstado() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            CASE estado
-                WHEN 0 THEN 'Pendientes'
-                WHEN 1 THEN 'Aprobadas'
-                WHEN 2 THEN 'Rechazadas'
-                ELSE 'Otros'
-            END as estado,
-            COUNT(IDsolicitud) as cantidad
-        FROM solicitud
-        GROUP BY estado
-        ORDER BY cantidad DESC
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getCrecimientoUsuarios() {
-    $pdo = getConnection();
-    $query = "
-        SELECT 
-            DATE_FORMAT('2025-01-01', '%Y-%m') as mes,
-            0 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-02-01', '%Y-%m') as mes,
-            5 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-03-01', '%Y-%m') as mes,
-            12 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-04-01', '%Y-%m') as mes,
-            18 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-05-01', '%Y-%m') as mes,
-            25 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-06-01', '%Y-%m') as mes,
-            35 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-07-01', '%Y-%m') as mes,
-            42 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-08-01', '%Y-%m') as mes,
-            50 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-09-01', '%Y-%m') as mes,
-            65 as cantidad
-        UNION ALL
-        SELECT 
-            DATE_FORMAT('2025-10-01', '%Y-%m') as mes,
-            80 as cantidad
-        ORDER BY mes
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Obtener datos para los reportes
+require_once '../Model/Reportes.php';
 $estadisticasGenerales = getEstadisticasGenerales();
 $usuariosPorCategoria = getUsuariosPorCategoria();
 $usuariosPorRol = getUsuariosPorRol();
@@ -469,9 +253,7 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
                         </div>
                     </div>
 
-                    <!-- Primera Fila de Gráficos -->
                     <div class="row report-section">
-                        <!-- Distribución de Usuarios por Categoría -->
                         <div class="col-12 col-md-6">
                             <div class="chart-container">
                                 <h5 class="chart-title">
@@ -481,7 +263,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
                             </div>
                         </div>
 
-                        <!-- Distribución de Usuarios por Rol -->
                         <div class="col-12 col-md-6">
                             <div class="chart-container">
                                 <h5 class="chart-title">
@@ -492,9 +273,7 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
                         </div>
                     </div>
 
-                    <!-- Segunda Fila de Gráficos -->
                     <div class="row report-section">
-                        <!-- Locales por Rubro -->
                         <div class="col-12 col-md-6">
                             <div class="chart-container">
                                 <h5 class="chart-title">
@@ -504,7 +283,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
                             </div>
                         </div>
 
-                        <!-- Estado de Promociones -->
                         <div class="col-12 col-md-6">
                             <div class="chart-container">
                                 <h5 class="chart-title">
@@ -515,9 +293,7 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
                         </div>
                     </div>
 
-                    <!-- Tercera Fila de Gráficos -->
                     <div class="row report-section">
-                        <!-- Uso de Promociones (Últimos 6 meses) -->
                         <div class="col-12 col-md-8">
                             <div class="chart-container">
                                 <h5 class="chart-title">
@@ -642,7 +418,7 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Colores para los gráficos
+        /*Cargar todos los graficos de la pagina*/
         const colors = {
             primary: '#4A3BC7',
             success: '#28a745',
@@ -654,7 +430,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             dark: '#343a40'
         };
 
-        // Preparar datos para los gráficos
         const usuariosCategoriaLabels = [<?php 
             $labels = [];
             foreach ($usuariosPorCategoria as $item) {
@@ -772,7 +547,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             echo implode(',', $data);
         ?>];
 
-        // Función auxiliar para obtener nombre del mes
         function getNombreMes(numeroMes) {
             const meses = [
                 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
@@ -781,7 +555,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             return meses[parseInt(numeroMes) - 1] || '';
         }
 
-        // Gráfico de Usuarios por Categoría
         const chartUsuariosCategoria = new Chart(
             document.getElementById('chartUsuariosCategoria'),
             {
@@ -823,7 +596,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             }
         );
 
-        // Gráfico de Usuarios por Rol
         const chartUsuariosRol = new Chart(
             document.getElementById('chartUsuariosRol'),
             {
@@ -857,7 +629,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             }
         );
 
-        // Gráfico de Locales por Rubro
         const chartLocalesRubro = new Chart(
             document.getElementById('chartLocalesRubro'),
             {
@@ -889,7 +660,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             }
         );
 
-        // Gráfico de Estado de Promociones
         const chartPromocionesEstado = new Chart(
             document.getElementById('chartPromocionesEstado'),
             {
@@ -952,7 +722,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             }
         );
 
-        // Gráfico de Estado de Solicitudes
         const chartSolicitudesEstado = new Chart(
             document.getElementById('chartSolicitudesEstado'),
             {
@@ -981,7 +750,6 @@ $crecimientoUsuarios = getCrecimientoUsuarios();
             }
         );
 
-        // Gráfico de Crecimiento de Usuarios
         const chartCrecimientoUsuarios = new Chart(
             document.getElementById('chartCrecimientoUsuarios'),
             {

@@ -1,10 +1,8 @@
 <?php
-// tiendas.php — listado de tiendas con modal de detalle
 include("../Model/ListadoTienda.php");
 
 $tiendas = listarTiendas(200);
 
-// helper de salida segura
 function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 ?>
 <!doctype html>
@@ -14,11 +12,9 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
   <title>Tiendas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap + Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Estilos mínimos -->
   <style>
     :root{ --bs-primary:#4A3BC7; }
     .hero{ background: linear-gradient(180deg,#F3F1FF 0%, #fff 70%); }
@@ -52,7 +48,6 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
             $localRubro  = $t['local_rubro']  ?? '';
             $ubiNombre   = $t['ubicacion_nombre'] ?? '—';
             $ubiDesc     = $t['ubicacion_descripcion'] ?? '—';
-            // Soporta alias comunes para el código
             $codigo      = $t['codigo'] ?? ($t['local_codigo'] ?? ($t['codigo_local'] ?? ''));
           ?>
           <div class="col">
@@ -62,7 +57,6 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
                   <div class="d-flex align-items-center gap-2 flex-wrap">
                     <h2 class="h6 mb-0 fw-semibold"><?= h($localNombre) ?></h2>
 
-                    <!-- Código del local con botón de copiar -->
                     <?php if ($codigo !== ''): ?>
                       <span class="badge rounded-pill code-pill text-body-secondary d-inline-flex align-items-center">
                         <i class="bi bi-hash me-1"></i>
@@ -81,7 +75,6 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
                     <?php endif; ?>
                   </div>
 
-                  <!-- Meta compacta -->
                   <ul class="list-inline text-body-secondary small mb-0 mt-2 d-flex flex-wrap gap-3">
                     <li class="list-inline-item" title="Rubro">
                       <i class="bi bi-tag me-1"></i><?= h($localRubro ?: '—') ?>
@@ -112,7 +105,6 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
       </div>
     <?php endif; ?>
 
-    <!-- Región para anunciar copia (accesible) -->
     <div id="copyLive" class="visually-hidden" aria-live="polite"></div>
   </main>
 

@@ -1,253 +1,251 @@
 <?php
-// ../Model/ProcesarDashboardCliente.php
-// Depende de: ../Model/conexion.php que debe exponer getConnection(): PDO
+require_once 'conexion.php';
 
+// Función para contar promociones usadas por un cliente (últimos 6 meses)
+function getPromocionesUsadasPorCliente($usuario_id) {
+    $pdo = getConnection();
+    $query = "
+        SELECT COUNT(*) as total 
+        FROM usopromocion 
+        WHERE usuarioFk = ? 
+        AND estado = 1 
+        AND fechaUso >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+    ";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$usuario_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
 
-include_once __DIR__ . "/conexion.php";
+// Función para actualizar la categoría del usuario
+function actualizarCategoriaUsuario($usuario_id) {
+    $pdo = getConnection();
+    
+    // Obtener número de promociones usadas en los últimos 6 meses
+    $promociones_usadas = getPromocionesUsadasPorCliente($usuario_id);
+    
+    // Determinar nueva categoría
+    if ($promociones_usadas < 5) {
+        $nueva_categoria = 'Inicial';
+    } elseif ($promociones_usadas >= 5 && $promociones_usadas <= 12) {
+        $nueva_categoria = 'Medium';
+    } else {
+        $nueva_categoria = 'Premium';
+    }
+    
+    // Obtener ID de la categoría
+    $query_categoria = "SELECT IDcategoria FROM categoria WHERE nombre = ?";
+    $stmt_categoria = $pdo->prepare($query_categoria);
+    $stmt_categoria->execute([$nueva_categoria]);
+    $categoria = $stmt_categoria->fetch(PDO::FETCH_ASSOC);
+    
+    if ($categoria) {
+        $categoria_id = $categoria['IDcategoria'];
+        
+        // Actualizar la categoría del usuario en la base de datos
+        $query_actualizar = "UPDATE usuario SET categoriaFK = ? WHERE IDusuario = ?";
+        $stmt_actualizar = $pdo->prepare($query_actualizar);
+        $stmt_actualizar->execute([$categoria_id, $usuario_id]);
+        
+        return [
+            'nueva_categoria' => $nueva_categoria,
+            'promociones_usadas' => $promociones_usadas,
+            'categoria_id' => $categoria_id
+        ];
+    }
+    
+    return false;
+}
 
-/**
- * Normaliza las categorías a un ranking para poder comparar "categoria o inferior".
- * Acepta equivalencias del enunciado y del dataset de ejemplo.
- */
-function categoria_rank(string $categoria): int {
-    $map = [
-        'inicial' => 1, 'basico' => 1, 'básico' => 1,
-        'medium'  => 2, 'medio'  => 2,
-        'premium' => 3, 'avanzado'=> 3, 'rockstar'=> 3,
+// Función para obtener información de progreso de categoría
+function getInfoProgresoCategoria($usuario_id) {
+    $promociones_usadas = getPromocionesUsadasPorCliente($usuario_id);
+    
+    if ($promociones_usadas < 5) {
+        $categoria_actual = 'Inicial';
+        $proximo_limite = 5;
+        $proxima_categoria = 'Medium';
+        $progreso = ($promociones_usadas / 5) * 100;
+    } elseif ($promociones_usadas >= 5 && $promociones_usadas <= 12) {
+        $categoria_actual = 'Medium';
+        $proximo_limite = 12;
+        $proxima_categoria = 'Premium';
+        $progreso = (($promociones_usadas - 5) / (12 - 5)) * 100;
+    } else {
+        $categoria_actual = 'Premium';
+        $proximo_limite = null;
+        $proxima_categoria = null;
+        $progreso = 100;
+    }
+    
+    return [
+        'categoria_actual' => $categoria_actual,
+        'promociones_usadas' => $promociones_usadas,
+        'proximo_limite' => $proximo_limite,
+        'proxima_categoria' => $proxima_categoria,
+        'progreso_porcentaje' => $progreso,
+        'restantes' => $proximo_limite ? $proximo_limite - $promociones_usadas : 0
     ];
-    $key = mb_strtolower(trim($categoria), 'UTF-8');
-    return $map[$key] ?? 1; // por defecto tratamos como 'Inicial'
 }
 
-/**
- * Devuelve cuántas promociones hay disponibles HOY para una categoría dada
- * (fecha vigente, día válido y estado=1).
- */
-function getPromocionesDisponiblesPorCategoria(string $categoria): int {
+// Otras funciones existentes (mantenerlas)
+function getPromocionesDisponiblesPorCategoria($categoria) {
     $pdo = getConnection();
-
-    $sql = "
-      SELECT COUNT(*) as total_promociones
-        FROM promocion p
-        WHERE p.estado = 1
-          AND CURDATE() BETWEEN p.desde AND p.hasta
-          AND p.categoriaHabilitada = :rankUsuario
+    $query = "
+        SELECT COUNT(*) as total 
+        FROM promocion 
+        WHERE categoriaHabilitada = ? 
+        AND estado = 1 
+        AND hasta >= CURDATE()
     ";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['rankUsuario' => $categoria]);
-    return (int)$stmt->fetchColumn();
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$categoria]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
 }
 
-/** Cantidad total de promociones que el cliente YA usó/solicitó (cualquier estado). */
-function getPromocionesUsadasPorCliente(int $idUsuario): int {
+function getNovedadesPorCategoria($categoria) {
     $pdo = getConnection();
-    $sql = "SELECT COUNT(*) FROM usopromocion WHERE usuarioFk = :u";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['u' => $idUsuario]);
-    return (int)$stmt->fetchColumn();
-}
-
-/** Cantidad de novedades activas para una categoría (fecha vigente y categoría alcanzable). */
-function getNovedadesPorCategoria(string $categoria): int {
-    $pdo = getConnection();
-    $sql = "
-        SELECT COUNT(*) FROM novedad n
-        WHERE CURDATE() BETWEEN n.desde AND n.hasta
-          AND (
-                CASE
-                  WHEN LOWER(n.usuarioHabilitado) IN ('inicial','basico','básico') THEN 1
-                  WHEN LOWER(n.usuarioHabilitado) IN ('medium','medio') THEN 2
-                  WHEN LOWER(n.usuarioHabilitado) IN ('premium','avanzado','rockstar') THEN 3
-                  ELSE 1
-                END
-              ) <= :rankUsuario
+    $query = "
+        SELECT COUNT(*) as total 
+        FROM novedad 
+        WHERE usuarioHabilitado = ? 
+        AND hasta >= CURDATE()
     ";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['rankUsuario' => categoria_rank($categoria)]);
-    return (int)$stmt->fetchColumn();
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$categoria]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
 }
 
-/**
- * Lista de promociones visibles para el cliente:
- *  - Vigentes por fecha y día
- *  - Estado=1
- *  - Categoría habilitada <= categoría del usuario
- *  - NO solicitadas previamente por este usuario (no exista registro en usopromocion)
- */
-function getPromocionesPorCategoria(string $categoria, int $idUsuario): array {
+function getPromocionesPorCategoria($categoria, $usuario_id) {
     $pdo = getConnection();
-    $sql = "
-        SELECT
+    $query = "
+        SELECT 
             p.IDpromocion,
             p.descripcion,
             p.desde,
             p.hasta,
             p.categoriaHabilitada,
             p.dia,
-            p.estado,
-            p.localFk,
-            l.nombre         AS local_nombre,
-            l.IDlocal        AS local_codigo,
+            l.nombre as local_nombre,
             l.codigo,
-            u.nombre         AS ubicacion_nombre,
-            u.Descripcion    AS ubicacion_detalle
-        FROM promocion AS p
-        JOIN local AS l        ON l.IDlocal = p.localFk
-        LEFT JOIN ubicacion AS u ON u.IDubicacion = l.ubicacionFK
-        LEFT JOIN usopromocion up
-               ON up.promoFK = p.IDpromocion AND up.usuarioFk = :idUsuario
-        WHERE p.estado = '1'
-          AND CURDATE() BETWEEN p.desde AND p.hasta
-          AND (
-                (p.dia BETWEEN 0 AND 6 AND p.dia = WEEKDAY(CURDATE())) OR
-                (p.dia BETWEEN 1 AND 7 AND p.dia = DAYOFWEEK(CURDATE()))
-              )
-          AND up.promoFK IS NULL
-          AND (
-            CASE
-              WHEN LOWER(p.categoriaHabilitada) IN ('inicial','basico','básico') THEN 1
-              WHEN LOWER(p.categoriaHabilitada) IN ('medium','medio') THEN 2
-              WHEN LOWER(p.categoriaHabilitada) IN ('premium','avanzado','rockstar') THEN 3
-              ELSE 1
-            END
-          ) <= :rankUsuario
-        ORDER BY p.desde DESC, p.IDpromocion DESC
+            u.nombre as ubicacion_nombre
+        FROM promocion p
+        INNER JOIN local l ON p.localFk = l.IDlocal
+        LEFT JOIN ubicacion u ON l.ubicacionFK = u.IDubicacion
+        WHERE p.categoriaHabilitada = ? 
+        AND p.estado = 0
+        AND p.hasta >= CURDATE()
+        AND p.IDpromocion NOT IN (
+            SELECT promoFK 
+            FROM usopromocion 
+            WHERE usuarioFk = ? AND estado IN (0, 1)
+        )
+        ORDER BY p.hasta ASC
+        LIMIT 6
     ";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        'idUsuario'   => $idUsuario,
-        'rankUsuario' => categoria_rank($categoria),
-    ]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-
-
-
-function getNovedadesRecientesPorCategoria($categoria_usuario, $limite = 8) {
-   
-    $pdo = getConnection();
-    
-    // Mapear categorías para comparación (igual que en las promociones)
-    $niveles_categoria = [
-        'Inicial' => 1,
-        'Medium' => 2,
-        'Premium' => 3,
-    ];
-    
-    $nivel_usuario = $niveles_categoria[$categoria_usuario] ?? 1;
-    
-    // Usar bindValue para el límite
-    $query = "
-        SELECT 
-            n.IDnovedad,
-            n.cabecera,
-            n.descripcion,
-            n.desde,
-            n.hasta,
-            n.usuarioHabilitado as categoriaHabilitada
-        FROM novedad n
-        WHERE CURDATE() BETWEEN n.desde AND n.hasta
-          AND (CASE n.usuarioHabilitado
-               WHEN 'Inicial' THEN 1
-               WHEN 'Medium' THEN 2
-               WHEN 'Premium' THEN 3
-               ELSE 1
-               END) <= ?
-        ORDER BY n.desde DESC
-        LIMIT ?
-    ";
-    
     $stmt = $pdo->prepare($query);
-    $stmt->bindValue(1, $nivel_usuario, PDO::PARAM_INT);
-    $stmt->bindValue(2, $limite, PDO::PARAM_INT);
-    $stmt->execute();
+    $stmt->execute([$categoria, $usuario_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-
-
-
-
-function getHistorialUsoCliente($idUsuario, $limite = 8) {
-   
+function getHistorialUsoCliente($usuario_id, $limite = 8) {
     $pdo = getConnection();
-    
-    // Convertir el límite a entero para evitar inyección SQL
-    $limite = (int)$limite;
-    
     $query = "
         SELECT 
             up.fechaUso,
             up.estado,
             p.descripcion as descripcion_promo,
-            l.nombre as nombre_local,
-            l.rubro as rubro_local,
             p.categoriaHabilitada,
-            u.nombre as ubicacion_nombre
+            l.nombre as nombre_local
         FROM usopromocion up
         INNER JOIN promocion p ON up.promoFK = p.IDpromocion
         INNER JOIN local l ON p.localFk = l.IDlocal
-        LEFT JOIN ubicacion u ON l.ubicacionFK = u.IDubicacion
         WHERE up.usuarioFk = ?
         ORDER BY up.fechaUso DESC
-        LIMIT " . $limite . "
-    ";
-    
+        LIMIT " . intval($limite);
     $stmt = $pdo->prepare($query);
-    $stmt->execute([$idUsuario]);
+    $stmt->execute([$usuario_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function solicitarPromocion(int $idUsuario, int $idPromocion): array {
+function getNovedadesRecientesPorCategoria($categoria, $limite = 8) {
     $pdo = getConnection();
-    $sqlPromo = "
-        SELECT p.IDpromocion
-        FROM promocion p
-        WHERE p.IDpromocion = :p
-          AND p.estado = '1'
-          AND CURDATE() BETWEEN p.desde AND p.hasta
-        LIMIT 1
+    $query = "
+        SELECT 
+            cabecera,
+            descripcion,
+            desde,
+            hasta,
+            usuarioHabilitado as categoriaHabilitada
+        FROM novedad 
+        WHERE usuarioHabilitado = ? 
+        AND hasta >= CURDATE() 
+        ORDER BY desde DESC
+        LIMIT ?
     ";
-    $st = $pdo->prepare($sqlPromo);
-    $st->execute(['p' => $idPromocion]);
-    if (!$st->fetchColumn()) {
-        return ['ok'=>false,'msg'=>'Promoción no disponible'];
-    }
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(1, $categoria, PDO::PARAM_STR);
+    $stmt->bindValue(2, (int)$limite, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
-    // Intentamos insertar evitando duplicado por PK compuesta
-    try {
-        $sqlIns = "
-            INSERT INTO usopromocion (usuarioFk, promoFK, fechaUso, estado)
-            VALUES (:u, :p, CURDATE(), 'pendiente')
+// Procesar solicitud de promoción
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    session_start();
+    
+    if ($_POST['action'] === 'solicitar' && isset($_POST['idPromocion'])) {
+        $usuario_id = $_SESSION['IDusuario'] ?? 0;
+        $promocion_id = $_POST['idPromocion'];
+        
+        $pdo = getConnection();
+        
+        // Verificar que la promoción existe y está disponible
+        $query_verificar = "
+            SELECT p.IDpromocion 
+            FROM promocion p
+            WHERE p.IDpromocion = ?
+              AND p.estado = 1
+              AND CURDATE() BETWEEN p.desde AND p.hasta
         ";
-        $stmt = $pdo->prepare($sqlIns);
-        $stmt->execute(['u'=>$idUsuario, 'p'=>$idPromocion]);
-        return ['ok'=>true,'msg'=>'Promoción solicitada'];
-    } catch (PDOException $e) {
-        if ((int)$e->errorInfo[1] === 1062) {
-            return ['ok'=>false,'msg'=>'Ya solicitaste esta promoción'];
+        
+        $stmt = $pdo->prepare($query_verificar);
+        $stmt->execute([$promocion_id]);
+        $promocion_valida = $stmt->fetch();
+        
+        if ($promocion_valida) {
+            // Verificar si ya usó esta promoción
+            $query_verificar_uso = "
+                SELECT * FROM usopromocion 
+                WHERE usuarioFk = ? AND promoFK = ? AND estado IN (0, 1)
+            ";
+            $stmt_uso = $pdo->prepare($query_verificar_uso);
+            $stmt_uso->execute([$usuario_id, $promocion_id]);
+            
+            if ($stmt_uso->fetch()) {
+                echo json_encode(['ok' => false, 'msg' => 'Ya has solicitado esta promoción anteriormente.']);
+            } else {
+                $query_insert = "
+                    INSERT INTO usopromocion (usuarioFk, promoFK, fechaUso, estado) 
+                    VALUES (?, ?, CURDATE(), 0)
+                ";
+                $stmt_insert = $pdo->prepare($query_insert);
+                
+                if ($stmt_insert->execute([$usuario_id, $promocion_id])) {
+                    // Actualizar categoría después de usar promoción
+                    actualizarCategoriaUsuario($usuario_id);
+                    
+                    echo json_encode(['ok' => true, 'msg' => 'Promoción solicitada exitosamente.']);
+                } else {
+                    echo json_encode(['ok' => false, 'msg' => 'Error al registrar la solicitud.']);
+                }
+            }
+        } else {
+            echo json_encode(['ok' => false, 'msg' => 'La promoción no está disponible.']);
         }
-        return ['ok'=>false,'msg'=>'Error al solicitar: '.$e->getMessage()];
     }
+    exit;
 }
-
-
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    if (session_status() === PHP_SESSION_NONE) { session_start(); }
-    header('Content-Type: application/json; charset=utf-8');
-
-    $accion = $_POST['action'] ?? $_POST['accion'] ?? '';
-    if ($accion === 'solicitar') {
-        $idPromo = (int)($_POST['idPromocion'] ?? 0);
-        $idUser  = (int)($_SESSION['IDusuario'] ?? 0);
-        if ($idPromo <= 0 || $idUser <= 0) {
-            echo json_encode(['ok'=>false,'msg'=>'Datos inválidos']); exit;
-        }
-        echo json_encode(solicitarPromocion($idUser, $idPromo)); exit;
-    }
-
-    echo json_encode(['ok'=>false,'msg'=>'Acción no reconocida']); exit;
-}
-
-
+?>

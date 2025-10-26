@@ -71,7 +71,6 @@ try {
         ]);
     }
 } catch (Exception $e) {
-    // Captura cualquier excepción y la envía como JSON
     echo json_encode([
         'ok' => false,
         'message' => $e->getMessage()

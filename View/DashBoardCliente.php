@@ -6,11 +6,21 @@ if (!isset($_SESSION['IDusuario'])) {
 }
 require_once '../Model/ProcesarDashboardCliente.php';
 
-$CAT = $_SESSION['Categoria'];
 $IDU = (int)($_SESSION['IDusuario'] ?? 0);
 
+// Actualizar categoría del usuario al entrar al dashboard
+$resultado_actualizacion = actualizarCategoriaUsuario($IDU);
+if ($resultado_actualizacion) {
+    $_SESSION['Categoria'] = $resultado_actualizacion['nueva_categoria'];
+}
+
+$CAT = $_SESSION['Categoria'];
+
+// Obtener información de progreso
+$info_progreso = getInfoProgresoCategoria($IDU);
+
 $numPromosDisponibles = getPromocionesDisponiblesPorCategoria($CAT);
-$numPromosUsadas      = getPromocionesUsadasPorCliente($IDU);
+$numPromosUsadas      = $info_progreso['promociones_usadas'];
 $numNovedadesActivas  = getNovedadesPorCategoria($CAT);
 $promociones          = getPromocionesPorCategoria($CAT, $IDU);
 $historialUso         = getHistorialUsoCliente($IDU, 8); 
@@ -85,6 +95,20 @@ $totalPromos          = count($promociones);
         padding: 0.25rem 0.5rem;
     }
 
+    .progress-bar-animated {
+        background: linear-gradient(90deg, var(--primary), rgba(var(--primary-rgb),0.85));
+        transition: width 0.6s ease;
+    }
+
+    .categoria-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .categoria-inicial { background-color: #28a745; color: white; }
+    .categoria-medium { background-color: #ffc107; color: #000; }
+    .categoria-premium { background-color: #dc3545; color: white; }
+
     a:focus, button:focus { outline: 3px solid rgba(var(--primary-rgb), 0.12); outline-offset: 2px; }
 
     @media (max-width: 767px) {
@@ -137,12 +161,55 @@ $totalPromos          = count($promociones);
 
         <div class="px-2 pb-4">
           <div class="small-muted mb-2">Tu categoría</div>
-          <div class="d-flex align-items-center">
-            <span class="badge badge-cat py-2 px-3"><?php echo htmlspecialchars($CAT); ?></span>
-            <span class="ms-auto small-muted">Progreso: 2/5</span>
+          <div class="d-flex align-items-center mb-2">
+            <span class="badge categoria-badge categoria-<?php echo strtolower($info_progreso['categoria_actual']); ?>">
+              <?php echo htmlspecialchars($info_progreso['categoria_actual']); ?>
+            </span>
+            <span class="ms-auto small-muted">
+              <?php echo $info_progreso['promociones_usadas']; ?> usos
+            </span>
           </div>
+          
           <div class="progress mt-2" style="height:8px;">
-            <div class="progress-bar" role="progressbar" style="width:40%; background: linear-gradient(90deg,var(--primary), rgba(var(--primary-rgb),0.85));" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar progress-bar-animated" 
+                 role="progressbar" 
+                 style="width:<?php echo $info_progreso['progreso_porcentaje']; ?>%;" 
+                 aria-valuenow="<?php echo $info_progreso['progreso_porcentaje']; ?>" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+            </div>
+          </div>
+          
+          <?php if ($info_progreso['proxima_categoria']): ?>
+            <div class="small-muted mt-2">
+              <i class="bi bi-arrow-up-circle me-1"></i>
+              <?php echo $info_progreso['restantes']; ?> promociones más para 
+              <strong><?php echo $info_progreso['proxima_categoria']; ?></strong>
+            </div>
+          <?php else: ?>
+            <div class="small-muted mt-2 text-success">
+              <i class="bi bi-trophy me-1"></i>
+              ¡Has alcanzado la categoría máxima!
+            </div>
+          <?php endif; ?>
+        </div>
+
+        <!-- Información del sistema de categorías -->
+        <div class="px-2 pb-4">
+          <div class="small-muted mb-2">Sistema de categorías</div>
+          <div class="small text-muted">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Inicial</span>
+              <span>0-4 usos</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span>Medium</span>
+              <span>5-12 usos</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Premium</span>
+              <span>13+ usos</span>
+            </div>
           </div>
         </div>
       </nav>
@@ -279,7 +346,6 @@ $totalPromos          = count($promociones);
           </section>
 
           <div class="row mt-4">
-            <!-- === HISTORIAL DE USO === -->
             <div class="col-12 col-lg-6">
               <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -339,7 +405,6 @@ $totalPromos          = count($promociones);
               </div>
             </div>
 
-            <!-- === NOVEDADES PARA TI === -->
             <div class="col-12 col-lg-6">
               <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -367,7 +432,6 @@ $totalPromos          = count($promociones);
                           <p class="small text-muted mb-2">
                             <?php 
                             $descripcion = $novedad['descripcion'] ?? '';
-                            // Mostrar solo un extracto de la descripción
                             if (strlen($descripcion) > 120) {
                                 $descripcion = substr($descripcion, 0, 120) . '...';
                             }
@@ -408,7 +472,6 @@ $totalPromos          = count($promociones);
     </div>
   </div>
 
-  <!-- El resto de tu código (modales, toasts, etc.) permanece igual -->
   <div class="modal fade" id="detallePromoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -446,13 +509,11 @@ $totalPromos          = count($promociones);
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-  // Tu código JavaScript existente permanece igual
   document.getElementById('btnMostrarMas')?.addEventListener('click', function(){
     document.querySelectorAll('.extra-promo').forEach(el => el.classList.remove('d-none'));
     this.remove();
   });
 
-  // Copiar código de local
   document.addEventListener('click', (e) => {
     const chip = e.target.closest('.copy-chip');
     if (chip && chip.dataset.copy){
@@ -516,7 +577,6 @@ $totalPromos          = count($promociones);
       const data = await res.json();
 
       if (data.ok){
-        // remover card
         const card = document.getElementById('promo-' + id);
         card?.remove();
         // cerrar modal si vino desde el modal
@@ -525,6 +585,11 @@ $totalPromos          = count($promociones);
           instance?.hide();
         }
         showToast('Promoción solicitada');
+        
+        // Recargar la página para actualizar la categoría y progreso
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }else{
         showToast(data.msg || 'No se pudo solicitar', true);
         (btnCard || btnModal).disabled = false;

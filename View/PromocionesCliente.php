@@ -1,198 +1,41 @@
 <?php
-// promociones.php - Página para buscar y listar promociones
 session_start();
-require_once '../Model/conexion.php';
-$pdo = getConnection();
+require_once '../Model/PromocionesCliente.php';
 
-// Obtener datos de la sesión
+
+
 $categoria_usuario = $_SESSION['Categoria'];
 $nombre_usuario = $_SESSION['Nombre'];
 $usuario_id = $_SESSION['IDusuario'];
 
-// Mapear categorías para comparación
-$niveles_categoria = [
-    'Inicial' => 1,
-    'Medium' => 2,
-    'Premium' => 3,
-];
+$promocionesModel = new PromocionesModel();
 
-$nivel_usuario = $niveles_categoria[$categoria_usuario] ?? 1;
-
-// Obtener promociones ya usadas por el usuario
-$query_promociones_usadas = "
-    SELECT promoFK 
-    FROM usopromocion 
-    WHERE usuarioFk = ? AND estado IN (0, 1)
-";
-$stmt_usadas = $pdo->prepare($query_promociones_usadas);
-$stmt_usadas->execute([$usuario_id]);
-$promociones_usadas = $stmt_usadas->fetchAll(PDO::FETCH_COLUMN);
-
-// Procesar búsqueda
 $codigo_busqueda = '';
-$promociones_filtradas = [];
 $locales_con_promociones = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['codigo_local'])) {
-        // Búsqueda por código de local
         $codigo_busqueda = trim($_POST['codigo_local']);
         
         if (!empty($codigo_busqueda)) {
-            // Buscar por código alfanumérico
-            $query = "
-                SELECT 
-                    l.IDlocal as codigo_local,
-                    l.nombre as nombre_local,
-                    l.rubro as rubro_local,
-                    p.IDpromocion as id_promocion,
-                    p.descripcion as descripcion_promo,
-                    p.desde as fecha_desde,
-                    p.hasta as fecha_hasta,
-                    p.categoriaHabilitada as categoria_requerida,
-                    p.dia as dia_promo,
-                    u.nombre as ubicacion_nombre
-                FROM local l
-                INNER JOIN promocion p ON l.IDlocal = p.localFk
-                LEFT JOIN ubicacion u ON l.ubicacionFK = u.IDubicacion
-                WHERE l.codigo LIKE ? 
-                  AND p.estado = 1
-                  AND CURDATE() BETWEEN p.desde AND p.hasta
-                ORDER BY l.nombre, p.desde
-            ";
-            
-            $stmt = $pdo->prepare($query);
-            $search_term = '%' . $codigo_busqueda . '%';
-            $stmt->execute([$search_term]);
-            $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Filtrar por categoría del usuario y por promociones no usadas
-            foreach ($promociones as $promo) {
-                $categoria_promo = $promo['categoria_requerida'];
-                $nivel_promo = $niveles_categoria[$categoria_promo] ?? 1;
-                
-                if ($nivel_usuario >= $nivel_promo && !in_array($promo['id_promocion'], $promociones_usadas)) {
-                    $promociones_filtradas[] = $promo;
-                }
-            }
-            
-            // Agrupar por local
-            foreach ($promociones_filtradas as $promo) {
-                $local_id = $promo['codigo_local'];
-                if (!isset($locales_con_promociones[$local_id])) {
-                    $locales_con_promociones[$local_id] = [
-                        'nombre' => $promo['nombre_local'],
-                        'rubro' => $promo['rubro_local'],
-                        'ubicacion' => $promo['ubicacion_nombre'],
-                        'promociones' => []
-                    ];
-                }
-                $locales_con_promociones[$local_id]['promociones'][] = $promo;
-            }
+            $locales_con_promociones = $promocionesModel->getPromocionesDisponibles(
+                $usuario_id, 
+                $categoria_usuario, 
+                $codigo_busqueda
+            );
         }
     } elseif (isset($_POST['usar_promocion'])) {
-        // Procesar uso de promoción via AJAX
         $promocion_id = $_POST['promocion_id'];
-        $local_id = $_POST['local_id'];
         
-        // Verificar que la promoción existe y está disponible
-        $query_verificar = "
-            SELECT p.IDpromocion 
-            FROM promocion p
-            WHERE p.IDpromocion = ?
-              AND p.estado = 1
-              AND CURDATE() BETWEEN p.desde AND p.hasta
-        ";
-        
-        $stmt = $pdo->prepare($query_verificar);
-        $stmt->execute([$promocion_id]);
-        $promocion_valida = $stmt->fetch();
-        
-        if ($promocion_valida) {
-            // Verificar si ya usó esta promoción
-            $query_verificar_uso = "
-                SELECT * FROM usopromocion 
-                WHERE usuarioFk = ? AND promoFK = ? AND estado IN (0, 1)
-            ";
-            $stmt_uso = $pdo->prepare($query_verificar_uso);
-            $stmt_uso->execute([$usuario_id, $promocion_id]);
-            
-            if ($stmt_uso->fetch()) {
-                echo json_encode(['success' => false, 'message' => 'Ya has solicitado esta promoción anteriormente.']);
-            } else {
-                // Registrar el uso de la promoción con estado 0 (pendiente)
-                $query_insert = "
-                    INSERT INTO usopromocion (usuarioFk, promoFK, fechaUso, estado) 
-                    VALUES (?, ?, CURDATE(), 0)
-                ";
-                $stmt_insert = $pdo->prepare($query_insert);
-                
-                if ($stmt_insert->execute([$usuario_id, $promocion_id])) {
-                    echo json_encode(['success' => true, 'message' => '¡Solicitud de promoción enviada exitosamente! El local debe aceptarla.']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al registrar la solicitud de promoción.']);
-                }
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'La promoción no está disponible.']);
-        }
+        $resultado = $promocionesModel->usarPromocion($usuario_id, $promocion_id);
+        echo json_encode($resultado);
         exit;
     }
 } else {
-    // Cargar TODAS las promociones disponibles para la categoría del usuario
-    $query = "
-        SELECT 
-            l.IDlocal as codigo_local,
-            l.nombre as nombre_local,
-            l.rubro as rubro_local,
-            p.IDpromocion as id_promocion,
-            p.descripcion as descripcion_promo,
-            p.desde as fecha_desde,
-            p.hasta as fecha_hasta,
-            p.categoriaHabilitada as categoria_requerida,
-            p.dia as dia_promo,
-            u.nombre as ubicacion_nombre
-        FROM promocion p
-        INNER JOIN local l ON l.IDlocal = p.localFk
-        LEFT JOIN ubicacion u ON l.ubicacionFK = u.IDubicacion
-        WHERE p.estado = 1
-          AND CURDATE() BETWEEN p.desde AND p.hasta
-        ORDER BY l.nombre, p.desde
-    ";
-    
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Filtrar por categoría del usuario y por promociones no usadas
-    foreach ($promociones as $promo) {
-        $categoria_promo = $promo['categoria_requerida'];
-        $nivel_promo = $niveles_categoria[$categoria_promo] ?? 1;
-        
-        if ($nivel_usuario >= $nivel_promo && !in_array($promo['id_promocion'], $promociones_usadas)) {
-            $promociones_filtradas[] = $promo;
-        }
-    }
-    
-    // Agrupar por local
-    foreach ($promociones_filtradas as $promo) {
-        $local_id = $promo['codigo_local'];
-        if (!isset($locales_con_promociones[$local_id])) {
-            $locales_con_promociones[$local_id] = [
-                'nombre' => $promo['nombre_local'],
-                'rubro' => $promo['rubro_local'],
-                'ubicacion' => $promo['ubicacion_nombre'],
-                'promociones' => []
-            ];
-        }
-        $locales_con_promociones[$local_id]['promociones'][] = $promo;
-    }
-}
-
-// Función para obtener el nombre del día de la semana
-function getDiaSemana($numero) {
-    $dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    return $dias[$numero - 1] ?? 'Todos los días';
+    $locales_con_promociones = $promocionesModel->getPromocionesDisponibles(
+        $usuario_id, 
+        $categoria_usuario
+    );
 }
 ?>
 
@@ -321,13 +164,12 @@ function getDiaSemana($numero) {
 </head>
 <body>
    
-<?php  include 'C:\xampp\htdocs\TPIShopping\layouts\Navbar.php'; ?>
+  <?php include_once(__DIR__ . "/../layouts/Navbar.php"); ?>
 
     <!-- Alertas -->
     <div id="alertContainer" class="alert-fixed"></div>
 
     <div class="container mt-4">
-        <!-- Header -->
         <div class="row mb-4">
             <div class="col-12 text-center">
                 <h1 class="text-primary-custom mb-3">🎁 Promociones Disponibles</h1>
@@ -335,7 +177,6 @@ function getDiaSemana($numero) {
             </div>
         </div>
 
-        <!-- Buscador -->
         <div class="row justify-content-center mb-5">
             <div class="col-md-8">
                 <div class="search-box">
@@ -364,7 +205,6 @@ function getDiaSemana($numero) {
             </div>
         </div>
 
-        <!-- Resultados -->
         <div class="row">
             <?php if (empty($locales_con_promociones)): ?>
                 <div class="col-12">
@@ -375,14 +215,15 @@ function getDiaSemana($numero) {
                             <p class="mb-0"><small>Verifica el nombre o intenta con otro local</small></p>
                         <?php else: ?>
                             <p class="mb-0">No hay promociones disponibles en este momento para tu categoría</p>
-                            <?php if (!empty($promociones_usadas)): ?>
+                            <?php 
+                            $promociones_usadas = $promocionesModel->getPromocionesUsadas($usuario_id);
+                            if (!empty($promociones_usadas)): ?>
                                 <p class="mb-0"><small>Algunas promociones pueden estar ocultas porque ya las has solicitado.</small></p>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
             <?php else: ?>
-                <!-- Mostrar resultados de búsqueda específica -->
                 <?php if (!empty($codigo_busqueda)): ?>
                     <div class="col-12">
                         <h2 class="text-primary-custom mb-4">
@@ -434,7 +275,7 @@ function getDiaSemana($numero) {
                                                             <?php if ($promocion['dia_promo']): ?>
                                                                 <div class="mb-2">
                                                                     <small class="text-muted">
-                                                                        <strong>📆 Día:</strong> <?php echo getDiaSemana($promocion['dia_promo']); ?>
+                                                                        <strong>📆 Día:</strong> <?php echo PromocionesModel::getDiaSemana($promocion['dia_promo']); ?>
                                                                     </small>
                                                                 </div>
                                                             <?php endif; ?>
@@ -474,7 +315,6 @@ function getDiaSemana($numero) {
                         </div>
                     <?php endforeach; ?>
                 
-                <!-- Mostrar todas las promociones ordenadas por tienda -->
                 <?php else: ?>
                     <div class="col-12">
                         <h2 class="text-primary-custom mb-4">📋 Todas las Promociones Disponibles</h2>
@@ -522,7 +362,7 @@ function getDiaSemana($numero) {
                                                             <?php if ($promocion['dia_promo']): ?>
                                                                 <div class="mb-2">
                                                                     <small class="text-muted">
-                                                                        <strong>Día:</strong> <?php echo getDiaSemana($promocion['dia_promo']); ?>
+                                                                        <strong>Día:</strong> <?php echo PromocionesModel::getDiaSemana($promocion['dia_promo']); ?>
                                                                     </small>
                                                                 </div>
                                                             <?php endif; ?>

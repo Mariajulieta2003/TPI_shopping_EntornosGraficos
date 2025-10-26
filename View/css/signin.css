@@ -1,9 +1,9 @@
 :root{
-  --bs-primary:#4A3BC7;             /* ya usada */
+  --bs-primary:#4A3BC7;             
   --bs-primary-rgb:74,59,199;
   --bs-dark:#23264B;
-  --bs-success:#22C55E;             /* verde para tildes/bordes */
+  --bs-success:#22C55E;             
 }
 
-/* opcional: fondo de sección */
+
 body{ background:#F8FAFC; }
