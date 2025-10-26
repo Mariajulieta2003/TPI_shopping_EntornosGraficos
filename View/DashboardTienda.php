@@ -96,7 +96,7 @@ $solicitudesPendientes = getSolicitudesPendientesPorLocal($idLocal);
   <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container-fluid">
       <a class="navbar-brand text-white" href="#">
-        <strong>ShoppingGenerico - Local</strong>
+        <strong>ShoppingUTN - Local</strong>
       </a>
 
       <div class="d-flex align-items-center ms-auto">

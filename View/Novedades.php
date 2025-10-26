@@ -1,5 +1,4 @@
 <?php
-// novedades.php — listado de novedades con modal de detalle
 include("../Model/ListarNovedades.php");
 
 session_start();
@@ -10,17 +9,14 @@ if (isset($_SESSION['Categoria'])) {
 
 }
 
-// ==== FIX: h() tolerante a arrays/objetos ====
 function h($v): string
 {
     if ($v === null) return '';
 
-    // Escalares (int, float, string, bool)
     if (is_scalar($v)) {
         return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
     }
 
-    // Arrays: unir por coma (si hay anidados/object, los serializa a JSON)
     if (is_array($v)) {
         $items = [];
         foreach ($v as $item) {
@@ -34,12 +30,10 @@ function h($v): string
         return implode(', ', $items);
     }
 
-    // Objetos stringeables
     if (is_object($v) && method_exists($v, '__toString')) {
         return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
     }
 
-    // Fallback: JSON
     $json = json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     return $json === false ? '' : htmlspecialchars($json, ENT_QUOTES, 'UTF-8');
 }
@@ -53,37 +47,33 @@ function recorte($txt, $len=160){ return h(mb_strimwidth((string)$txt, 0, $len, 
   <title>Novedades</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap + Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  <!-- COMPACTADO REAL (aislado a esta página) -->
+
   <style>
     :root{ --bs-primary:#4A3BC7; }
 
-    /* ===== Scope: sólo esta página ===== */
     .page-novedades .hero        { background: linear-gradient(180deg,#F3F1FF 0%, #fff 70%); padding-block: .75rem !important; }
     .page-novedades .hero h1     { margin-bottom: .25rem !important; }
     .page-novedades .hero p      { margin: 0 !important; }
 
     .page-novedades main         { padding-block: 1rem !important; }
-    .page-novedades .news-wrap   { max-width: 960px; margin-inline: auto; }   /* evita franjas laterales */
+    .page-novedades .news-wrap   { max-width: 960px; margin-inline: auto; }   
     .page-novedades .news-card   { border-left:.45rem solid #4A3BC7; border-radius:.75rem; }
-    .page-novedades .news-card .card-body { padding: .8rem 1rem !important; } /* card bajita */
-    .page-novedades .gy-tight > *{ margin-top: .75rem !important; }           /* separación mínima entre cards */
+    .page-novedades .news-card .card-body { padding: .8rem 1rem !important; } 
+    .page-novedades .gy-tight > *{ margin-top: .75rem !important; }          
 
-    /* Si el footer o contenedores globales traen py-5/my-5, achicamos acá sin tocar sus archivos */
     .page-novedades footer       { padding-top: 1rem !important; padding-bottom: 1rem !important; margin-top: 0 !important; }
 
-    /* Si tu navbar es fixed-top, descomentá para evitar solapado arriba */
-    /* body{ padding-top:72px; } */
+  
   </style>
 </head>
-<body class="page-novedades">
+<body class="page-novedades" style=" background-color: #eeecfd">
 
   <?php include_once(__DIR__ . "/../layouts/Navbar.php"); ?>
+  
 
-  <!-- ENCABEZADO COMPACTO -->
   <section class="hero border-bottom">
     <div class="container-xxl">
       <h1 class="h4 text-primary">Novedades</h1>
@@ -91,7 +81,6 @@ function recorte($txt, $len=160){ return h(mb_strimwidth((string)$txt, 0, $len, 
     </div>
   </section>
 
-  <!-- CONTENIDO COMPACTO -->
   <main class="container-xxl">
     <?php if (empty($novedades)): ?>
       <div class="alert alert-light border text-body-secondary mb-0">No hay novedades vigentes por el momento.</div>
@@ -145,7 +134,6 @@ function recorte($txt, $len=160){ return h(mb_strimwidth((string)$txt, 0, $len, 
 
   <?php include_once(__DIR__ . "/../layouts/footer.php"); ?>
 
-  <!-- MODAL -->
   <div class="modal fade" id="novedadModal" tabindex="-1" aria-labelledby="novedadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content rounded-4">

@@ -28,7 +28,7 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
     .code-pill:hover{ border-color:#4A3BC7; }
   </style>
 </head>
-<body>
+<body style=" background-color: #eeecfd">
 
   <?php include_once(__DIR__ . "/../layouts/Navbar.php"); ?>
 
@@ -199,7 +199,7 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
     });
   </script>
 
-<?php if (!isset($_SESSION['IDusuario'])): ?>
+<?php if (isset($_SESSION['IDusuario'])): ?>
 <script src="../layouts/JS/OcultarBoton.js" ></script>
 <?php endif; ?>
 

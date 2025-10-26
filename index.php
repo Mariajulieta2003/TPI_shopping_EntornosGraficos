@@ -22,8 +22,8 @@
 .hero .hero-search .form-control{ border-top-left-radius: 999px; border-bottom-left-radius:999px; }
 .hero .hero-search .btn{ border-top-right-radius: 999px; border-bottom-right-radius:999px; }
   </style>
-<?php  include 'C:\xampp\htdocs\TPIShopping\layouts\Navbar.php'; ?>
-</style>
+<?php include __DIR__ . '/layouts/Navbar.php'; ?>
+
   <section class="hero text-white">
     <div class="container py-5">
       <h1 class="display-5 fw-bold mb-4">Descubrí las mejores<br>tiendas y ofertas</h1>
@@ -200,8 +200,9 @@
 </section>>
 </main>
 
-<?php include 'C:\xampp\htdocs\TPIShopping\layouts\footer.php'; ?>
-<script src="https://kit.fontawesome.com/accf4898f4.js" crossorigin="anonymous"></script>  
+<?php include __DIR__ . '/layouts/footer.php'; ?>
+
+<script src="https://kit.fontawesome.com/accf4898f4.js" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 

@@ -30,7 +30,7 @@
     <title>Crear nueva tienda</title>
 </head>
 
-<body class="bg-light">
+<body style="background-color: #eeecfd">
     <?php
     include '../layouts/Navbar.php';
     include ("../Model/ProcesarTienda.php"); 

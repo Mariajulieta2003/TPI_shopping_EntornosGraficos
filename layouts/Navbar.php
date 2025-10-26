@@ -4,8 +4,7 @@
 
  
 ?>
-<style><?php include 'C:\xampp\htdocs\TPIShopping\layouts\css\Navbar.css'; ?></style>
-
+<style><?php include dirname(__DIR__) . '/layouts/css/Navbar.css'; ?></style>
 <header class="hero-header">
   <nav class="navbar navbar-expand-lg justify-content-evenly" data-bs-theme="dark" style="--bs-navbar-bg:#2A2668;">
     <div class="container align-items d-flex flex-row mx-3">

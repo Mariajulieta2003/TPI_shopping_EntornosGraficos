@@ -53,7 +53,7 @@ function formatearDias($valor) {
 </style>
 </head>
 <body class="bg-subtle">
-<?php  include 'C:\xampp\htdocs\TPIShopping\layouts\Navbar.php'; ?>
+  <?php include_once(__DIR__ . "/../layouts/Navbar.php"); ?>
 <header class="bg-white border-bottom">
   <div class="container section-pad">
     <h1 class="h3 text-primary mb-1">Promociones</h1>
@@ -190,7 +190,7 @@ function formatearDias($valor) {
       });
     });
   </script>
-  <?php include 'C:\xampp\htdocs\TPIShopping\layouts\footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>
   
 
 </body>

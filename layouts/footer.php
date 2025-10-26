@@ -1,4 +1,5 @@
-<style><?php include 'C:\xampp\htdocs\TPIShopping\layouts\css\footer.css'; ?></style>
+<style><?php include dirname(__DIR__) . '/layouts/css/footer.css'; ?></style>
+
 <footer class="site-footer mt-auto text-white py-2">
   <div class="container py-4">
     <div class="row g-4">

@@ -16,7 +16,7 @@ function crearPromocion($datos) {
     $query = "
         INSERT INTO promocion 
         (descripcion, desde, hasta, categoriaHabilitada, dia, estado, localFk) 
-        VALUES (?, ?, ?, ?, ?, 1, ?)
+        VALUES (?, ?, ?, ?, ?, 0, ?)
     ";
     $stmt = $pdo->prepare($query);
     return $stmt->execute([

@@ -97,7 +97,7 @@ $totalPromos          = count($promociones);
   <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container-fluid">
       <a class="navbar-brand text-white" href="#">
-        <strong>ShoppingGenerico</strong>
+        <strong>ShoppingUTN</strong>
       </a>
 
       <div class="d-flex align-items-center ms-auto">

@@ -1,32 +1,27 @@
 <?php
-// Model/ProcesarTienda.php
-// Inserta en tabla `solicitud` y devuelve el ID insertado.
-// Requiere: Model/conexion.php con getConnection(): PDO
+
 
 include_once(__DIR__ . "/conexion.php");
 
 function saveStoreRequest(array $data) {
     $pdo = getConnection();
-    // Aseguramos excepciones para poder capturar fallos reales
+  
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // IMPORTANTE:
-    //  - Columna en BD: `contraseña` (con ñ). La dejamos entre backticks.
-    //  - Parámetro nombrado: :contrasena (sin ñ) para evitar problemas de encoding.
     $sql = "INSERT INTO solicitud
-              (`nombre`, `email`, `contraseña`, `telefono`, `sexo`, `dni`, `cuil`, `rubro`, `nombreLocal`, `ubicacion`)
+              (`nombre`, `email`, `contraseña`, `telefono`, `sexo`, `dni`, `cuil`, `rubro`, `nombreLocal`, `ubicacion`,`estado`)
             VALUES
-              (:nombre, :email, :contrasena, :telefono, :sexo, :dni, :cuil, :rubro, :nombreLocal, :ubicacion)";
+              (:nombre, :email, :contrasena, :telefono, :sexo, :dni, :cuil, :rubro, :nombreLocal, :ubicacion, 0)";
 
     $stmt = $pdo->prepare($sql);
 
-    // Hash seguro de la contraseña (si ya te viene hasheada, quitá esta línea)
-    $hash = password_hash((string)($data['contrasena'] ?? ''), PASSWORD_DEFAULT);
+ 
+   
 
     $ok = $stmt->execute([
         'nombre'       => (string)$data['nombre'],
         'email'        => (string)$data['email'],
-        'contrasena'   => $hash,
+        'contrasena'   => $data['contrasena'],
         'telefono'     => ($data['telefono'] === '' ? null : (string)$data['telefono']),
         'sexo'         => ($data['sexo'] === '' ? null : (string)$data['sexo']),
         'dni'          => (string)$data['dni'],

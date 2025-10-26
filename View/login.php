@@ -5,30 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOGIN</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link href="./css/EstiloLogin.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-
-    
-<link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
+    <link href="View/css/EstiloLogin.css" rel="stylesheet">
 
 
 
   </head>
-<body>
+<body style="background-color: #eeecfd !important;">
     <!-- Este login es un mero prototipo para que puedan testear el inicio de sesion y/o el registro-->
 
   <?php 
-    include '../layouts/Navbar.php';
+    include dirname(__DIR__) . '/layouts/Navbar.php';
   
   ?>
 
      
 
-  <section class="container py-5">
+  <section class="container py-5 " >
   <div class="row justify-content-center">
-    <!-- más ancho en desktop -->
     <div class="col-12 col-md-8 col-lg-7 col-xl-6">
       <div class="card shadow-sm">
         <div class="card-body p-5">
@@ -71,7 +68,7 @@
     </div>
   </div>
 </section>
-  <?php include '../layouts/footer.php'; ?>
+  <?php include dirname(__DIR__) . '/layouts/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
 
   <script src="./js/login_Fetch.js"> </script>

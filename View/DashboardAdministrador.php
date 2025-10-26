@@ -1,273 +1,8 @@
 <?php
 session_start();
-require_once '../Model/conexion.php';
+require_once '../Model/DashBoardAdmin.php';
 
-
-// Funciones para el dashboard del administrador
-
-// Manejo de acciones administrativas vía POST (AJAX)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
-    // Verificar sesión y rol
-    session_start();
-    if (empty($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
-        header('Content-Type: application/json; charset=utf-8', true, 403);
-        echo json_encode(['error' => 'Permiso denegado']);
-        exit;
-    }
-
-    require_once __DIR__ . '/../Model/conexion.php';
-    $pdo = getConnection();
-    $action = $_POST['action'];
-
-    header('Content-Type: application/json; charset=utf-8');
-
-    try {
-        switch ($action) {
-            // LOCALES
-            case 'create_local':
-                $nombre = trim($_POST['nombre'] ?? '');
-                $usuarioFK = !empty($_POST['usuarioFK']) ? intval($_POST['usuarioFK']) : null;
-                $ubicacionFK = !empty($_POST['ubicacionFK']) ? intval($_POST['ubicacionFK']) : null;
-                $rubro = trim($_POST['rubro'] ?? '');
-                if ($nombre === '') throw new Exception('Nombre de local requerido');
-                $stmt = $pdo->prepare("INSERT INTO local (nombre, usuarioFK, ubicacionFK, rubro) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$nombre, $usuarioFK, $ubicacionFK, $rubro]);
-                echo json_encode(['success' => true, 'IDlocal' => $pdo->lastInsertId()]);
-                break;
-
-            case 'update_local':
-                $id = intval($_POST['IDlocal'] ?? 0);
-                if ($id <= 0) throw new Exception('IDlocal inválido');
-                $nombre = trim($_POST['nombre'] ?? '');
-                $usuarioFK = !empty($_POST['usuarioFK']) ? intval($_POST['usuarioFK']) : null;
-                $ubicacionFK = !empty($_POST['ubicacionFK']) ? intval($_POST['ubicacionFK']) : null;
-                $rubro = trim($_POST['rubro'] ?? '');
-                $stmt = $pdo->prepare("UPDATE local SET nombre = ?, usuarioFK = ?, ubicacionFK = ?, rubro = ? WHERE IDlocal = ?");
-                $stmt->execute([$nombre, $usuarioFK, $ubicacionFK, $rubro, $id]);
-                echo json_encode(['success' => true]);
-                break;
-
-            case 'delete_local':
-                $id = intval($_POST['IDlocal'] ?? 0);
-                if ($id <= 0) throw new Exception('IDlocal inválido');
-                $stmt = $pdo->prepare("DELETE FROM local WHERE IDlocal = ?");
-                $stmt->execute([$id]);
-                echo json_encode(['success' => true]);
-                break;
-
-            // VALIDAR CUENTAS (DUEÑOS)
-            case 'validate_user':
-                $userId = intval($_POST['IDusuario'] ?? 0);
-                $approve = isset($_POST['approve']) && $_POST['approve'] == '1' ? 1 : 0;
-                if ($userId <= 0) throw new Exception('IDusuario inválido');
-                $stmt = $pdo->prepare("UPDATE usuario SET estado = ? WHERE IDusuario = ?");
-                $stmt->execute([$approve, $userId]);
-                echo json_encode(['success' => true]);
-                break;
-
-            // SOLICITUDES DE DESCUENTO
-            case 'decide_solicitud':
-                $id = intval($_POST['IDsolicitud'] ?? 0);
-                $approve = isset($_POST['approve']) && $_POST['approve'] == '1' ? 1 : 0;
-                if ($id <= 0) throw new Exception('IDsolicitud inválido');
-                // Asumir columna 'estado' en solicitud: 1=aprobada,2=rechazada,0=pendiente
-                $estado = $approve ? 1 : 2;
-                $stmt = $pdo->prepare("UPDATE solicitud SET estado = ? WHERE IDsolicitud = ?");
-                $stmt->execute([$estado, $id]);
-                echo json_encode(['success' => true]);
-                break;
-
-            // NOVEDADES
-            case 'create_novedad':
-                $titulo = trim($_POST['titulo'] ?? '');
-                $descripcion = trim($_POST['descripcion'] ?? '');
-                $desde = $_POST['desde'] ?? null;
-                $hasta = $_POST['hasta'] ?? null;
-                if ($titulo === '') throw new Exception('Título requerido');
-                $stmt = $pdo->prepare("INSERT INTO novedad (titulo, descripcion, desde, hasta) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$titulo, $descripcion, $desde, $hasta]);
-                echo json_encode(['success' => true, 'IDnovedad' => $pdo->lastInsertId()]);
-                break;
-
-            case 'update_novedad':
-                $id = intval($_POST['IDnovedad'] ?? 0);
-                if ($id <= 0) throw new Exception('IDnovedad inválido');
-                $titulo = trim($_POST['titulo'] ?? '');
-                $descripcion = trim($_POST['descripcion'] ?? '');
-                $desde = $_POST['desde'] ?? null;
-                $hasta = $_POST['hasta'] ?? null;
-                $stmt = $pdo->prepare("UPDATE novedad SET titulo = ?, descripcion = ?, desde = ?, hasta = ? WHERE IDnovedad = ?");
-                $stmt->execute([$titulo, $descripcion, $desde, $hasta, $id]);
-                echo json_encode(['success' => true]);
-                break;
-
-            case 'delete_novedad':
-                $id = intval($_POST['IDnovedad'] ?? 0);
-                if ($id <= 0) throw new Exception('IDnovedad inválido');
-                $stmt = $pdo->prepare("DELETE FROM novedad WHERE IDnovedad = ?");
-                $stmt->execute([$id]);
-                echo json_encode(['success' => true]);
-                break;
-
-            default:
-                echo json_encode(['error' => 'Acción no válida']);
-        }
-    } catch (Exception $e) {
-        http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()]);
-    }
-    exit;
-}
-
-// Obtener estadísticas generales
-function getEstadisticasGenerales() {
-    $pdo = getConnection();
-    
-    $stats = [];
-    
-    // Total de locales
-    $query = "SELECT COUNT(*) as total FROM local";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['total_locales'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Solicitudes pendientes de validación
-    $query = "SELECT COUNT(*) as total FROM solicitud";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['solicitudes_pendientes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Promociones pendientes de aprobación
-    $query = "SELECT COUNT(*) as total FROM promocion WHERE estado = 0";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['promociones_pendientes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Total de novedades activas
-    $query = "SELECT COUNT(*) as total FROM novedad WHERE hasta >= CURDATE()";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['novedades_activas'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Usos de promociones (últimos 30 días)
-    $query = "SELECT COUNT(*) as total FROM usopromocion WHERE fechaUso >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $stats['usos_30_dias'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    return $stats;
-}
-
-// Obtener locales para gestión
-function getLocales() {
-    $pdo = getConnection();
-    $query = "
-        SELECT l.*, u.nombreUsuario as dueño, ub.nombre as ubicacion_nombre 
-        FROM local l 
-        LEFT JOIN usuario u ON l.usuarioFK = u.IDusuario 
-        LEFT JOIN ubicacion ub ON l.ubicacionFK = ub.IDubicacion 
-        ORDER BY l.nombre
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Obtener solicitudes pendientes de dueños
-function getSolicitudesPendientes() {
-    $pdo = getConnection();
-    $query = "SELECT * FROM solicitud ORDER BY IDsolicitud DESC";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Obtener promociones pendientes de aprobación
-function getPromocionesPendientes() {
-    $pdo = getConnection();
-    $query = "
-        SELECT p.*, l.nombre as local_nombre, l.rubro as local_rubro 
-        FROM promocion p 
-        INNER JOIN local l ON p.localFk = l.IDlocal 
-        WHERE p.estado = 0 
-        ORDER BY p.desde ASC
-    ";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Obtener novedades activas
-function getNovedadesActivas() {
-    $pdo = getConnection();
-    $query = "SELECT * FROM novedad WHERE hasta >= CURDATE() ORDER BY desde DESC";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Obtener reporte de uso de descuentos
-function getReporteUsos($filtros = []) {
-    $pdo = getConnection();
-    
-    $whereConditions = ["1=1"];
-    $params = [];
-    
-    // Filtro por fecha desde
-    if (!empty($filtros['fecha_desde'])) {
-        $whereConditions[] = "up.fechaUso >= ?";
-        $params[] = $filtros['fecha_desde'];
-    }
-    
-    // Filtro por fecha hasta
-    if (!empty($filtros['fecha_hasta'])) {
-        $whereConditions[] = "up.fechaUso <= ?";
-        $params[] = $filtros['fecha_hasta'];
-    }
-    
-    // Filtro por local
-    if (!empty($filtros['local_id'])) {
-        $whereConditions[] = "p.localFk = ?";
-        $params[] = $filtros['local_id'];
-    }
-    
-    $whereClause = implode(" AND ", $whereConditions);
-    
-    $query = "
-        SELECT 
-            up.fechaUso,
-            up.estado,
-            u.nombreUsuario,
-            u.DNI,
-            c.nombre as categoria_usuario,
-            p.descripcion as promocion_descripcion,
-            p.categoriaHabilitada,
-            l.nombre as local_nombre,
-            l.rubro as local_rubro
-        FROM usopromocion up
-        INNER JOIN promocion p ON up.promoFK = p.IDpromocion
-        INNER JOIN usuario u ON up.usuarioFk = u.IDusuario
-        INNER JOIN categoria c ON u.categoriaFK = c.IDcategoria
-        INNER JOIN local l ON p.localFk = l.IDlocal
-        WHERE $whereClause
-        ORDER BY up.fechaUso DESC
-        LIMIT 100
-    ";
-    
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Obtener todos los locales para filtros
-function getAllLocales() {
-    $pdo = getConnection();
-    $query = "SELECT IDlocal, nombre FROM local ORDER BY nombre";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
+$reporteUsos = getReporteUsos($filtrosReporte);
 $estadisticas = getEstadisticasGenerales();
 $locales = getLocales();
 $solicitudesPendientes = getSolicitudesPendientes();
@@ -275,24 +10,6 @@ $promocionesPendientes = getPromocionesPendientes();
 $novedadesActivas = getNovedadesActivas();
 $todosLocales = getAllLocales();
 
-// Procesar filtros para reportes
-$filtrosReporte = [];
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['filtro_reporte'])) {
-    $filtrosReporte = [
-        'fecha_desde' => $_POST['fecha_desde'] ?? '',
-        'fecha_hasta' => $_POST['fecha_hasta'] ?? '',
-        'local_id' => $_POST['local_id'] ?? ''
-    ];
-} else {
-    // Por defecto, último mes
-    $filtrosReporte = [
-        'fecha_desde' => date('Y-m-d', strtotime('-1 month')),
-        'fecha_hasta' => date('Y-m-d'),
-        'local_id' => ''
-    ];
-}
-
-$reporteUsos = getReporteUsos($filtrosReporte);
 ?>
 
 <!DOCTYPE html>
@@ -423,7 +140,7 @@ $reporteUsos = getReporteUsos($filtrosReporte);
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand text-white" href="#">
-                <strong>ShoppingGenerico - Administrador</strong>
+                <strong>ShoppingUTN- Administrador</strong>
             </a>
 
             <div class="d-flex align-items-center ms-auto">
@@ -445,12 +162,12 @@ $reporteUsos = getReporteUsos($filtrosReporte);
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <nav class="col-12 col-md-3 col-lg-2 px-3 sidebar">
+                  <nav class="col-12 col-md-3 col-lg-2 px-3 sidebar">
                 <div class="pt-3 pb-2">
                     <h6 class="text-muted">Panel de Administración</h6>
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link active" href="./DashboardAdmin.php">
+                            <a class="nav-link active" href="./DashboardAdministrador.php">
                                 <i class="bi bi-speedometer2 me-2"></i>Dashboard
                             </a>
                         </li>
@@ -460,17 +177,17 @@ $reporteUsos = getReporteUsos($filtrosReporte);
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="./ValidarCuentas.php">
-                                <i class="bi bi-person-check me-2"></i>Validar Cuentas
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="./AprobarSolicitudes.php">
                                 <i class="bi bi-clipboard-check me-2"></i>Aprobar Solicitudes
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="./GestionNovedades.php">
+                            <a class="nav-link" href="./AprobarPromociones.php">
+                                <i class="bi bi-tag me-2"></i>Aprobar Promociones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="./GestionNovedades.php">
                                 <i class="bi bi-megaphone me-2"></i>Gestión de Novedades
                             </a>
                         </li>
