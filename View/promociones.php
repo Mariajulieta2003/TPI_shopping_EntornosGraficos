@@ -156,7 +156,7 @@ function formatearDias($valor) {
   </div>
 
 <?php if (isset($_SESSION['IDusuario'])): ?>
-<script src="../layouts/JS/OcultarBoton.js" ></script>
+<script src="../layouts/JS/cambiarNombre.js"></script>
 <?php endif; ?>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>

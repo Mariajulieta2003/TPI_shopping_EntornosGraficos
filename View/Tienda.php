@@ -1,6 +1,6 @@
 <?php
 include("../Model/ListadoTienda.php");
-
+session_start();
 $tiendas = listarTiendas(200);
 
 function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
@@ -192,8 +192,14 @@ function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
   </script>
 
 <?php if (isset($_SESSION['IDusuario'])): ?>
-<script src="../layouts/JS/OcultarBoton.js" ></script>
+<script src="../layouts/JS/cambiarNombre.js"></script>
 <?php endif; ?>
+
+
+
+
+
+
 
 </body>
 </html>

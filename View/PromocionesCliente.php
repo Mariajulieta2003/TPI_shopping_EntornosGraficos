@@ -2,7 +2,11 @@
 session_start();
 require_once '../Model/PromocionesCliente.php';
 
-
+if (!isset($_SESSION['IDusuario']) || $_SESSION['Rol'] !='Usuario') {
+session_unset();
+    header("Location: ../index.php");
+    exit;
+}
 
 $categoria_usuario = $_SESSION['Categoria'];
 $nombre_usuario = $_SESSION['Nombre'];

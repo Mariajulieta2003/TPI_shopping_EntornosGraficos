@@ -1,3 +1,11 @@
+<?php
+session_start();
+
+ if (isset($_SESSION['IDusuario'])): ?>
+<script src="./layouts/JS/cambiarNombre.js"></script>
+<?php endif; ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -200,7 +208,10 @@
 </section>>
 </main>
 
-<?php include __DIR__ . '/layouts/footer.php'; ?>
+<?php include __DIR__ . '/layouts/footer.php'; 
+?>
+
+
 
 <script src="https://kit.fontawesome.com/accf4898f4.js" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">

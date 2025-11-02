@@ -2,6 +2,14 @@
 session_start();
 require_once '../Model/DashBoardAdmin.php';
 
+
+
+if (!isset($_SESSION['IDusuario']) || $_SESSION['Rol'] !='Administrador') {
+  session_unset();
+    header("Location: ../index.php");
+    exit;
+}
+
 $reporteUsos = getReporteUsos($filtrosReporte);
 $estadisticas = getEstadisticasGenerales();
 $locales = getLocales();
@@ -17,7 +25,7 @@ $todosLocales = getAllLocales();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Administrador - ShoppingGenerico</title>
+    <title>Menu Administrador - ShoppingGenerico</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -150,7 +158,7 @@ $todosLocales = getAllLocales();
                         <span class="badge bg-light text-primary">Administrador</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="./DashboardAdmin.php">Inicio</a></li>
+                        <li><a class="dropdown-item" href="./DashboardAdministrador.php">Inicio</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="../Model/logout.php">Cerrar sesión</a></li>
                     </ul>
@@ -168,7 +176,7 @@ $todosLocales = getAllLocales();
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link active" href="./DashboardAdministrador.php">
-                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                                <i class="bi bi-speedometer2 me-2"></i>Menu
                             </a>
                         </li>
                         <li class="nav-item">
@@ -208,7 +216,7 @@ $todosLocales = getAllLocales();
                         <div>
                             <h1 class="h3 mb-1">
                                 <i class="bi bi-speedometer2 me-2" style="color: var(--primary);"></i>
-                                Dashboard de Administración
+                                Menu de Administración
                             </h1>
                             <p class="text-muted mb-0">Gestión completa del sistema ShoppingGenerico</p>
                         </div>

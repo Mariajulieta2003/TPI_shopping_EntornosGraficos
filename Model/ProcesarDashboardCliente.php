@@ -1,7 +1,6 @@
 <?php
 require_once 'conexion.php';
 
-// Función para contar promociones usadas por un cliente (últimos 6 meses)
 function getPromocionesUsadasPorCliente($usuario_id) {
     $pdo = getConnection();
     $query = "
@@ -17,7 +16,6 @@ function getPromocionesUsadasPorCliente($usuario_id) {
     return $result['total'];
 }
 
-// Función para actualizar la categoría del usuario
 function actualizarCategoriaUsuario($usuario_id) {
     $pdo = getConnection();
     
@@ -42,7 +40,6 @@ function actualizarCategoriaUsuario($usuario_id) {
     if ($categoria) {
         $categoria_id = $categoria['IDcategoria'];
         
-        // Actualizar la categoría del usuario en la base de datos
         $query_actualizar = "UPDATE usuario SET categoriaFK = ? WHERE IDusuario = ?";
         $stmt_actualizar = $pdo->prepare($query_actualizar);
         $stmt_actualizar->execute([$categoria_id, $usuario_id]);
@@ -57,7 +54,6 @@ function actualizarCategoriaUsuario($usuario_id) {
     return false;
 }
 
-// Función para obtener información de progreso de categoría
 function getInfoProgresoCategoria($usuario_id) {
     $promociones_usadas = getPromocionesUsadasPorCliente($usuario_id);
     
@@ -88,7 +84,6 @@ function getInfoProgresoCategoria($usuario_id) {
     ];
 }
 
-// Otras funciones existentes (mantenerlas)
 function getPromocionesDisponiblesPorCategoria($categoria) {
     $pdo = getConnection();
     $query = "
@@ -192,7 +187,6 @@ function getNovedadesRecientesPorCategoria($categoria, $limite = 8) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Procesar solicitud de promoción
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     session_start();
     
